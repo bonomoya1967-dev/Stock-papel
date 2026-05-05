@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 
-const SHEET_URL = "https://api.allorigins.win/raw?url=" + encodeURIComponent("https://docs.google.com/spreadsheets/d/e/2PACX-1vRzQR8BMfTHHNXKVfosVRTTEaPCxXVzBqruct9ZUDpOAv1O4ht6y36F_5fKxZW3-a9772MvuvqaMAk_/pub?gid=1760846900&single=true&output=csv");
+const SHEET_URL = "https://opensheet.elk.sh/10tWEt77gKq5CDpfgBjeyFHA-zAjtaoHSpQ4OgtsV1dk/1";
+
 const ADMIN_PASSWORD = "admin2026";
 const HOURS_48 = 48 * 60 * 60 * 1000;
 const G = "#C8930A";
