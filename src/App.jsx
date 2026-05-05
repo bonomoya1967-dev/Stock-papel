@@ -5,6 +5,18 @@ const ADMIN_PASSWORD = "admin2026";
 const HOURS_48 = 48 * 60 * 60 * 1000;
 const GB = "#C8930A";
 
+const NAME = "Nombre Producto";
+const CAT = "Categoria";
+const DESC = "Descripcion";
+const PASTA = "Pasta";
+const FAB = "Fabricante";
+const GRAM = "Gramaje";
+const ANCHO = "Ancho";
+const LARGO = "Largo";
+const HOJAS = "Hojas";
+const KGS = "Kgs";
+const ID_ENT = "ID_Entrada";
+
 const getRes = () => { try { return JSON.parse(localStorage.getItem("reservas") || "[]"); } catch { return []; } };
 const saveRes = (d) => { try { localStorage.setItem("reservas", JSON.stringify(d)); } catch {} };
 const isExpired = (t) => Date.now() > t;
@@ -22,6 +34,7 @@ export default function App() {
   const [selected, setSelected] = useState(null);
   const [reservations, setReservations] = useState([]);
   const [search, setSearch] = useState("");
+  const [cart, setCart] = useState([]);
   const [formOpen, setFormOpen] = useState(false);
   const [formData, setFormData] = useState({ nombre: "", email: "", tel: "" });
   const [formError, setFormError] = useState("");
@@ -29,17 +42,12 @@ export default function App() {
   const [adminPass, setAdminPass] = useState("");
   const [adminAuth, setAdminAuth] = useState(false);
   const [adminError, setAdminError] = useState("");
-  const [reservedProduct, setReservedProduct] = useState(null);
   const [tick, setTick] = useState(0);
 
   useEffect(() => {
     fetch(SHEET_URL)
       .then(r => r.json())
-      .then(data => {
-        const parsed = data.map((row, i) => ({ _id: i + 2, ...row }));
-        setProducts(parsed);
-        setLoading(false);
-      })
+      .then(data => { setProducts(data.map((row, i) => ({ _id: i + 2, ...row }))); setLoading(false); })
       .catch(() => { setLoadError(true); setLoading(false); });
     setReservations(getRes());
     const iv = setInterval(() => setTick(x => x + 1), 60000);
@@ -51,39 +59,35 @@ export default function App() {
     if (valid.length !== reservations.length) { setReservations(valid); saveRes(valid); }
   }, [tick]);
 
-  const NAME = "Nombre Producto";
-  const CAT = "Categoria";
-  const DESC = "Descripcion";
-  const PASTA = "Pasta";
-  const FAB = "Fabricante";
-  const GRAM = "Gramaje";
-  const ANCHO = "Ancho";
-  const LARGO = "Largo";
-  const HOJAS = "Hojas";
-  const KGS = "Kgs";
-  const ID_ENT = "ID_Entrada";
-
   const reservedIds = reservations.filter(r => r.paid || !isExpired(r.expiresAt)).flatMap(r => r.items);
   const availableProducts = products.filter(p => !reservedIds.includes(p._id));
   const filteredProducts = availableProducts.filter(p =>
     !search || JSON.stringify(p).toLowerCase().includes(search.toLowerCase())
   );
 
+  const toggleCart = (id, e) => {
+    e && e.stopPropagation();
+    setCart(c => c.includes(id) ? c.filter(x => x !== id) : [...c, id]);
+  };
+
   const doReserve = () => {
     if (!formData.nombre.trim() || !formData.email.trim()) { setFormError("Rellena nombre y email."); return; }
     if (!/\S+@\S+\.\S+/.test(formData.email)) { setFormError("Email no válido."); return; }
-    const newR = { id: Date.now(), ...formData, items: reservedProduct ? [reservedProduct._id] : [], createdAt: Date.now(), expiresAt: Date.now() + HOURS_48, paid: false };
+    if (cart.length === 0) { setFormError("No hay productos en la cesta."); return; }
+    const newR = { id: Date.now(), ...formData, items: cart, createdAt: Date.now(), expiresAt: Date.now() + HOURS_48, paid: false };
     const updated = [...reservations, newR];
     setReservations(updated); saveRes(updated);
-    setFormOpen(false); setFormData({ nombre: "", email: "", tel: "" }); setFormError(""); setReservedProduct(null);
-    setSuccessMsg("✓ Reserva confirmada. Te contactaremos en 48h.");
-    setTimeout(() => setSuccessMsg(""), 6000);
+    setFormOpen(false); setFormData({ nombre: "", email: "", tel: "" }); setFormError("");
+    setCart([]);
+    setSuccessMsg(`✓ Reserva confirmada para ${cart.length} producto${cart.length > 1 ? "s" : ""}. Te contactaremos en 48h.`);
+    setTimeout(() => setSuccessMsg(""), 7000);
     setScreen("list");
   };
 
   const markPaid = (id) => { const u = reservations.map(r => r.id === id ? { ...r, paid: true } : r); setReservations(u); saveRes(u); };
   const deleteR = (id) => { const u = reservations.filter(r => r.id !== id); setReservations(u); saveRes(u); };
   const pendingCount = reservations.filter(r => !r.paid && !isExpired(r.expiresAt)).length;
+  const cartProducts = cart.map(id => products.find(p => p._id === id)).filter(Boolean);
 
   const S = {
     app: { maxWidth: 430, margin: "0 auto", minHeight: "100vh", background: "#f2f2f7", fontFamily: "-apple-system, 'SF Pro Display', 'Segoe UI', sans-serif" },
@@ -113,33 +117,60 @@ export default function App() {
     <div style={S.app}>
 
       {screen === "list" && (
-        <div style={{ paddingBottom: 80 }}>
+        <div style={{ paddingBottom: cart.length > 0 ? 140 : 80 }}>
           <div style={S.header}>
             <div style={S.headerTop}>
               <div>
                 <div style={{ color: "rgba(255,255,255,0.7)", fontSize: 13, marginBottom: 2 }}>☰</div>
                 <div style={S.headerTitle}>Productos</div>
               </div>
+              {cart.length > 0 && (
+                <div style={{ background: "#fff", borderRadius: 20, padding: "6px 14px", display: "flex", alignItems: "center", gap: 6, cursor: "pointer" }} onClick={() => setFormOpen(true)}>
+                  <span style={{ fontSize: 18 }}>🛒</span>
+                  <span style={{ background: GB, color: "#fff", borderRadius: 10, fontSize: 12, fontWeight: 700, padding: "1px 7px" }}>{cart.length}</span>
+                </div>
+              )}
             </div>
             <div style={S.searchWrap}>
               <span style={S.searchIcon}>🔍</span>
               <input style={S.searchInput} placeholder="Buscar" value={search} onChange={e => setSearch(e.target.value)} />
             </div>
           </div>
+
           {successMsg && <div style={{ background: "#d1fae5", color: "#065f46", padding: "12px 16px", fontSize: 14, fontWeight: 500 }}>{successMsg}</div>}
           {loading && <div style={{ textAlign: "center", padding: 48, color: "#8e8e93" }}>⏳ Cargando productos...</div>}
           {loadError && <div style={{ background: "#fee2e2", color: "#991b1b", margin: 16, borderRadius: 12, padding: 16, textAlign: "center", fontSize: 14 }}>Error al cargar productos.</div>}
-          {!loading && !loadError && filteredProducts.map(p => (
-            <div key={p._id} style={S.row} onClick={() => { setSelected(p); setScreen("detail"); }}>
-              <div style={{ flex: 1 }}>
-                <div style={S.rowName}>{p[NAME]}{p[GRAM] ? ` ${p[GRAM]} gr/m2` : ""}</div>
-                <div style={S.rowSub}>{p[ANCHO] && p[LARGO] ? `${p[ANCHO]}X${p[LARGO]}` : ""}{p[KGS] ? `     ${p[KGS]}Kgs` : ""}</div>
+
+          {!loading && !loadError && filteredProducts.map(p => {
+            const inCart = cart.includes(p._id);
+            return (
+              <div key={p._id} style={S.row} onClick={() => { setSelected(p); setScreen("detail"); }}>
+                <div style={{ flex: 1 }}>
+                  <div style={S.rowName}>{p[NAME]}{p[GRAM] ? ` ${p[GRAM]} gr/m2` : ""}</div>
+                  <div style={S.rowSub}>{p[ANCHO] && p[LARGO] ? `${p[ANCHO]}X${p[LARGO]}` : ""}{p[KGS] ? `     ${p[KGS]}Kgs` : ""}</div>
+                </div>
+                <button onClick={e => toggleCart(p._id, e)}
+                  style={{ background: inCart ? GB : "#f2f2f7", border: "none", borderRadius: 20, width: 32, height: 32, fontSize: 18, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", marginLeft: 10, flexShrink: 0, color: inCart ? "#fff" : "#888" }}>
+                  {inCart ? "✓" : "+"}
+                </button>
               </div>
-              <div style={{ color: "#c7c7cc", fontSize: 18, letterSpacing: 1.5 }}>···</div>
-            </div>
-          ))}
+            );
+          })}
+
           {!loading && !loadError && filteredProducts.length === 0 && (
             <div style={{ textAlign: "center", padding: 60, color: "#8e8e93" }}>📦 No hay productos</div>
+          )}
+
+          {cart.length > 0 && (
+            <div style={{ position: "fixed", bottom: 80, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 430, background: GB, padding: "14px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", zIndex: 90 }}>
+              <div>
+                <p style={{ color: "#fff", fontWeight: 700, fontSize: 15 }}>{cart.length} producto{cart.length > 1 ? "s" : ""} seleccionado{cart.length > 1 ? "s" : ""}</p>
+                <p style={{ color: "rgba(255,255,255,0.8)", fontSize: 12 }}>Toca para reservar</p>
+              </div>
+              <button onClick={() => setFormOpen(true)} style={{ background: "#fff", color: GB, border: "none", borderRadius: 20, padding: "10px 20px", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>
+                Reservar →
+              </button>
+            </div>
           )}
         </div>
       )}
@@ -157,8 +188,11 @@ export default function App() {
               {selected[ANCHO] && selected[LARGO] ? `${selected[ANCHO]}X${selected[LARGO]}` : ""}
             </p>
             <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
-              <button style={S.btnGold} onClick={() => { setReservedProduct(selected); setFormOpen(true); }}>Reservar Produ...</button>
-              <button style={S.btnWhite}>Reserva realiza...</button>
+              <button style={{ ...S.btnGold, background: cart.includes(selected._id) ? "#16a34a" : GB }}
+                onClick={e => toggleCart(selected._id, e)}>
+                {cart.includes(selected._id) ? "✓ En la cesta" : "Añadir a cesta"}
+              </button>
+              <button style={S.btnWhite} onClick={() => setScreen("list")}>Volver</button>
             </div>
             {selected[KGS] && <div style={S.detailRow}><span>Kgs</span><span style={{ color: "#8e8e93" }}>{selected[KGS]}</span></div>}
             {selected[HOJAS] && <div style={S.detailRow}><span>Hojas</span><span style={{ color: "#8e8e93" }}>{Number(selected[HOJAS]).toLocaleString("es-ES")}</span></div>}
@@ -168,9 +202,6 @@ export default function App() {
             {selected[ID_ENT] && <div style={S.detailRow}><span>Entrada</span><span style={{ color: "#8e8e93" }}>{selected[ID_ENT]}</span></div>}
             {selected[ANCHO] && <div style={S.detailRow}><span>Ancho</span><span style={{ color: "#8e8e93" }}>{selected[ANCHO]}</span></div>}
             {selected[LARGO] && <div style={S.detailRow}><span>Largo</span><span style={{ color: "#8e8e93" }}>{selected[LARGO]}</span></div>}
-          </div>
-          <div style={{ padding: "24px 16px 0" }}>
-            <button style={{ ...S.btnGold, borderRadius: 12, padding: "15px 16px", fontSize: 16 }} onClick={() => { setReservedProduct(selected); setFormOpen(true); }}>Reservar Producto</button>
           </div>
         </div>
       )}
@@ -285,18 +316,19 @@ export default function App() {
         <div style={S.modal} onClick={() => setFormOpen(false)}>
           <div style={S.modalSheet} onClick={e => e.stopPropagation()}>
             <div style={S.modalHandle} />
-            <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 4 }}>Reservar Producto</h2>
-            {reservedProduct && (
-              <div style={{ background: "#FEF3C7", borderRadius: 10, padding: "10px 14px", marginBottom: 16, marginTop: 8 }}>
-                <p style={{ fontWeight: 700, fontSize: 14, color: "#92400e" }}>{reservedProduct[NAME]}</p>
-                <p style={{ fontSize: 13, color: "#a67c00" }}>
-                  {reservedProduct[CAT] ? reservedProduct[CAT] + " · " : ""}
-                  {reservedProduct[GRAM] ? reservedProduct[GRAM] + " gr/m2 · " : ""}
-                  {reservedProduct[KGS] ? reservedProduct[KGS] + " Kg" : ""}
-                </p>
-              </div>
-            )}
-            <p style={{ fontSize: 13, color: "#8e8e93", marginBottom: 20 }}>Reserva válida <strong>48 horas</strong>. Te contactamos para el pago.</p>
+            <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 4 }}>Tu cesta ({cart.length})</h2>
+            <p style={{ fontSize: 13, color: "#8e8e93", marginBottom: 16 }}>Reserva válida <strong>48 horas</strong>. Te contactamos para el pago.</p>
+            <div style={{ background: "#f9f9f9", borderRadius: 10, padding: "8px 12px", marginBottom: 20 }}>
+              {cartProducts.map(p => (
+                <div key={p._id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: "1px solid #f0f0f0" }}>
+                  <div>
+                    <p style={{ fontSize: 14, fontWeight: 600, color: "#111" }}>{p[NAME]}</p>
+                    <p style={{ fontSize: 12, color: "#8e8e93" }}>{p[GRAM] ? p[GRAM] + " gr/m2 · " : ""}{p[KGS] ? p[KGS] + " Kg" : ""}</p>
+                  </div>
+                  <button onClick={() => toggleCart(p._id)} style={{ background: "none", border: "none", color: "#dc2626", fontSize: 22, cursor: "pointer", padding: "0 4px" }}>×</button>
+                </div>
+              ))}
+            </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 20 }}>
               <div>
                 <label style={{ fontSize: 13, fontWeight: 600, display: "block", marginBottom: 6 }}>Nombre *</label>
