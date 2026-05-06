@@ -47,6 +47,13 @@ const LayersIcon = ({ size = 24 }) => (
   </svg>
 );
 
+const UserIcon = ({ size = 24, color = "#fff" }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <circle cx="12" cy="8" r="4" fill={color} />
+    <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" fill={color} />
+  </svg>
+);
+
 export default function App() {
   const [screen, setScreen] = useState("splash");
   const [products, setProducts] = useState([]);
@@ -55,6 +62,7 @@ export default function App() {
   const [selected, setSelected] = useState(null);
   const [reservations, setReservations] = useState([]);
   const [search, setSearch] = useState("");
+  const [searchGram, setSearchGram] = useState("");
   const [cart, setCart] = useState([]);
   const [formOpen, setFormOpen] = useState(false);
   const [formData, setFormData] = useState({ nombre: "", email: "", tel: "" });
@@ -82,9 +90,11 @@ export default function App() {
 
   const reservedIds = reservations.filter(r => r.paid || !isExpired(r.expiresAt)).flatMap(r => r.items);
   const availableProducts = products.filter(p => !reservedIds.includes(p._id));
-  const filteredProducts = availableProducts.filter(p =>
-    !search || JSON.stringify(p).toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredProducts = availableProducts.filter(p => {
+    const matchName = !search || JSON.stringify(p).toLowerCase().includes(search.toLowerCase());
+    const matchGram = !searchGram || (p[GRAM] && p[GRAM].toString().includes(searchGram.trim()));
+    return matchName && matchGram;
+  });
 
   const toggleCart = (id, e) => {
     e && e.stopPropagation();
@@ -111,16 +121,16 @@ export default function App() {
   const deleteR = (id) => { const u = reservations.filter(r => r.id !== id); setReservations(u); saveRes(u); };
   const cartProducts = cart.map(id => products.find(p => p._id === id)).filter(Boolean);
 
-  const inp = { width: "100%", padding: "12px 16px", border: "1.5px solid #e0e0e0", borderRadius: 10, fontSize: 15, outline: "none", background: "#fafafa", fontFamily: "inherit", color: "#111" };
+  const inp = { width: "100%", padding: "10px 12px", border: "1.5px solid #e0e0e0", borderRadius: 8, fontSize: 13, outline: "none", background: "#fafafa", fontFamily: "inherit", color: "#111" };
 
   return (
     <div style={{ maxWidth: 430, margin: "0 auto", minHeight: "100vh", background: "#f5f6fa", fontFamily: "'Segoe UI', -apple-system, sans-serif" }}>
       <style>{`
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        input::placeholder { color: #aaa; }
-        .row-item { background: #fff; padding: 14px 16px; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; gap: 12px; cursor: pointer; }
+        input::placeholder { color: #bbb; font-size: 12px; }
+        .row-item { background: #fff; padding: 13px 16px; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; gap: 12px; cursor: pointer; }
         .row-item:active { background: #f9f9f9; }
-        .detail-row { display: flex; justify-content: space-between; align-items: center; padding: 13px 0; border-bottom: 1px solid #f2f2f7; font-size: 14px; }
+        .detail-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f2f2f7; font-size: 14px; }
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 200; display: flex; align-items: flex-end; }
         .modal-sheet { background: #fff; border-radius: 20px 20px 0 0; padding: 0 20px 44px; width: 100%; max-height: 93vh; overflow-y: auto; }
         .handle { width: 40px; height: 4px; background: #ddd; border-radius: 2px; margin: 12px auto 18px; }
@@ -150,7 +160,7 @@ export default function App() {
       {screen === "list" && (
         <div style={{ paddingBottom: 80 }}>
           <div style={{ background: NAVY, padding: "14px 16px" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <LayersIcon size={28} />
                 <div style={{ display: "flex", alignItems: "baseline", gap: 3 }}>
@@ -161,13 +171,18 @@ export default function App() {
               <div style={{ color: "#fff", fontSize: 22 }}>☰</div>
             </div>
           </div>
-          <div style={{ padding: "14px 16px 0", background: "#fff", borderBottom: "1px solid #eee" }}>
-            <div style={{ position: "relative", marginBottom: 10 }}>
-              <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "#aaa", fontSize: 16 }}>🔍</span>
-              <input style={{ ...inp, paddingLeft: 42, border: "1.5px solid #e8e8e8" }} placeholder="Buscar productos..." value={search} onChange={e => setSearch(e.target.value)} />
+
+          <div style={{ padding: "12px 16px 12px", background: "#fff", borderBottom: "1px solid #eee" }}>
+            <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+              <div style={{ flex: 1 }}>
+                <input style={inp} placeholder="Producto" value={search} onChange={e => setSearch(e.target.value)} onKeyDown={e => e.key === "Enter" && e.target.blur()} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <input style={inp} placeholder="Gramaje" value={searchGram} onChange={e => setSearchGram(e.target.value)} onKeyDown={e => e.key === "Enter" && e.target.blur()} />
+              </div>
             </div>
-            <button style={{ background: NAVY, color: "#fff", border: "none", borderRadius: 10, padding: "12px", fontSize: 15, fontWeight: 700, width: "100%", cursor: "pointer", marginBottom: 14, fontFamily: "inherit" }}>
-              Buscar
+            <button style={{ background: NAVY, color: "#fff", border: "none", borderRadius: 8, padding: "11px", fontSize: 14, fontWeight: 700, width: "100%", cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+              🔍 Buscar
             </button>
           </div>
 
@@ -257,16 +272,13 @@ export default function App() {
                   <span style={{ color: "#fff", fontSize: 18, fontWeight: 800 }}>board</span>
                 </div>
               </div>
-              <div style={{ color: "#fff", fontSize: 22 }}>☰</div>
             </div>
           </div>
-          <div style={{ padding: "14px 16px 0", background: "#fff", borderBottom: "1px solid #eee" }}>
-            <div style={{ position: "relative", marginBottom: 14 }}>
-              <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "#aaa", fontSize: 16 }}>🔍</span>
-              <input style={{ ...inp, paddingLeft: 42, border: "1.5px solid #e8e8e8" }} placeholder="Buscar..." readOnly />
-            </div>
+          <div style={{ padding: "12px 16px", background: "#fff", borderBottom: "1px solid #eee" }}>
+            <p style={{ fontSize: 13, color: "#8e8e93" }}>
+              {cart.length === 0 ? "Sin productos seleccionados" : `${cart.length} producto${cart.length > 1 ? "s" : ""} seleccionado${cart.length > 1 ? "s" : ""}`}
+            </p>
           </div>
-
           {cart.length === 0 ? (
             <div style={{ textAlign: "center", padding: 60, color: "#8e8e93" }}>
               <div style={{ fontSize: 40, marginBottom: 12 }}>📋</div>
@@ -275,9 +287,6 @@ export default function App() {
             </div>
           ) : (
             <>
-              <div style={{ padding: "10px 16px 4px" }}>
-                <p style={{ fontSize: 12, color: "#8e8e93" }}>{cart.length} producto{cart.length > 1 ? "s" : ""} seleccionado{cart.length > 1 ? "s" : ""}</p>
-              </div>
               {cartProducts.map(p => (
                 <div key={p._id} className="row-item" onClick={() => { setSelected(p); setScreen("detail"); }}>
                   <div style={{ flexShrink: 0 }}><LayersIcon size={32} /></div>
@@ -305,18 +314,22 @@ export default function App() {
         <div style={{ paddingBottom: 80 }}>
           <div style={{ background: NAVY, padding: "14px 16px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <LayersIcon size={28} />
+              <UserIcon size={36} color="#fff" />
               <span style={{ color: "#fff", fontSize: 18, fontWeight: 800 }}>Admin</span>
             </div>
-            <div style={{ paddingBottom: 4 }} />
           </div>
           {!adminAuth ? (
             <div style={{ padding: 20 }}>
               <div style={{ background: "#fff", borderRadius: 14, padding: 24 }}>
-                <h2 style={{ fontSize: 18, fontWeight: 800, color: NAVY, marginBottom: 6 }}>Acceso Admin</h2>
-                <p style={{ fontSize: 13, color: "#8e8e93", marginBottom: 20 }}>Solo para uso interno.</p>
-                <input style={{ ...inp, marginBottom: 12 }} type="password" placeholder="Contraseña" value={adminPass}
-                  onChange={e => setAdminPass(e.target.value)}
+                <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
+                  <div style={{ background: NAVY, borderRadius: "50%", width: 110, height: 110, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <UserIcon size={70} color="#fff" />
+                  </div>
+                </div>
+                <h2 style={{ fontSize: 18, fontWeight: 800, color: NAVY, marginBottom: 6, textAlign: "center" }}>Acceso Admin</h2>
+                <p style={{ fontSize: 13, color: "#8e8e93", marginBottom: 20, textAlign: "center" }}>Solo para uso interno.</p>
+                <input style={{ ...inp, marginBottom: 12 }} type="password" placeholder="Contraseña"
+                  value={adminPass} onChange={e => setAdminPass(e.target.value)}
                   onKeyDown={e => { if (e.key === "Enter") { adminPass === ADMIN_PASSWORD ? (setAdminAuth(true), setAdminError("")) : setAdminError("Contraseña incorrecta."); }}} />
                 {adminError && <p style={{ color: "#dc2626", fontSize: 13, marginBottom: 10 }}>{adminError}</p>}
                 <button className="btn-navy" onClick={() => { adminPass === ADMIN_PASSWORD ? (setAdminAuth(true), setAdminError("")) : setAdminError("Contraseña incorrecta."); }}>Entrar</button>
@@ -366,20 +379,20 @@ export default function App() {
       {screen !== "splash" && (
         <div className="bottom-bar">
           <div className="nav-item" onClick={() => setScreen("list")}>
-            <span style={{ fontSize: 24 }}>📦</span>
+            <span style={{ fontSize: 22 }}>📦</span>
             <span className="nav-label" style={{ color: screen === "list" ? NAVY : "#aaa" }}>Productos</span>
             {screen === "list" && <div style={{ width: 20, height: 2, background: NAVY, borderRadius: 1, marginTop: 2 }} />}
           </div>
           <div className="nav-item" onClick={() => setScreen("reservas")}>
             <div style={{ position: "relative" }}>
-              <span style={{ fontSize: 24 }}>📋</span>
+              <span style={{ fontSize: 22 }}>📋</span>
               {cart.length > 0 && <span style={{ position: "absolute", top: -4, right: -8, background: "#dc2626", color: "#fff", borderRadius: 10, fontSize: 9, fontWeight: 700, padding: "1px 5px", minWidth: 16, textAlign: "center" }}>{cart.length}</span>}
             </div>
             <span className="nav-label" style={{ color: screen === "reservas" ? NAVY : "#aaa" }}>Mis Reservas</span>
             {screen === "reservas" && <div style={{ width: 20, height: 2, background: NAVY, borderRadius: 1, marginTop: 2 }} />}
           </div>
           <div className="nav-item" onClick={() => { setScreen("admin"); setAdminAuth(false); setAdminPass(""); }}>
-            <span style={{ fontSize: 24 }}>⚙️</span>
+            <UserIcon size={36} color={screen === "admin" ? NAVY : "#aaa"} />
             <span className="nav-label" style={{ color: screen === "admin" ? NAVY : "#aaa" }}>Admin</span>
             {screen === "admin" && <div style={{ width: 20, height: 2, background: NAVY, borderRadius: 1, marginTop: 2 }} />}
           </div>
