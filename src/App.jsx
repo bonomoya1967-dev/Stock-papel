@@ -1,4 +1,4 @@
-  import { useState, useEffect } from "react";
+   import { useState, useEffect } from "react";
 
 const SHEET_URL = "https://opensheet.elk.sh/10tWEt77gKq5CDpfgBjeyFHA-zAjtaoHSpQ4OgtsV1dk/productos.csv";
 const ADMIN_EMAIL = "hakkinen2002@me.com";
@@ -72,10 +72,10 @@ export default function App() {
   const [adminAuth, setAdminAuth] = useState(false);
   const [adminError, setAdminError] = useState("");
   const [tick, setTick] = useState(0);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
 
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    const handleResize = () => setIsMobile(window.innerWidth < 1024);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
@@ -143,7 +143,7 @@ export default function App() {
   const Sidebar = () => (
     <div style={{ width: 220, background: NAVY, minHeight: "100vh", display: "flex", flexDirection: "column", flexShrink: 0, position: "sticky", top: 0 }}>
       <div style={{ padding: "28px 20px 24px", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <LayersIcon size={32} />
           <div>
             <div style={{ display: "flex", alignItems: "baseline", gap: 2 }}>
@@ -329,7 +329,7 @@ export default function App() {
           {reservations.length === 0 ? (
             <div style={{ textAlign: "center", padding: 48, color: "#8e8e93", background: "#fff", borderRadius: 12 }}>📋 No hay reservas</div>
           ) : (
-            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill, minmax(360px, 1fr))", gap: 12 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(360px, 1fr))", gap: 12 }}>
               {reservations.map(res => {
                 const expired = !res.paid && isExpired(res.expiresAt);
                 const resProds = res.items.map(id => products.find(p => p._id === id)).filter(Boolean);
@@ -413,7 +413,6 @@ export default function App() {
 
       {screen !== "splash" && isMobile && (
         <div style={{ paddingBottom: 80 }}>
-          {/* Mobile header - with safe area for notch */}
           <div style={{ background: NAVY, paddingTop: "env(safe-area-inset-top, 44px)", paddingBottom: 12, paddingLeft: 16, paddingRight: 16 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 8 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
