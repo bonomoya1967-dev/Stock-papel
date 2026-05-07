@@ -1,4 +1,4 @@
-   import { useState, useEffect } from "react";
+    import { useState, useEffect } from "react";
 
 const SHEET_URL = "https://opensheet.elk.sh/10tWEt77gKq5CDpfgBjeyFHA-zAjtaoHSpQ4OgtsV1dk/productos.csv";
 const ADMIN_EMAIL = "hakkinen2002@me.com";
@@ -19,23 +19,95 @@ const HOJAS = "Hojas";
 const KGS = "Kgs";
 const ID_ENT = "ID_Entrada";
 
+const getLang = () => {
+  const l = (navigator.language || "es").toLowerCase();
+  return l.startsWith("es") ? "es" : "en";
+};
+
+const T = {
+  es: {
+    splash_sub: "Stock Cartón · Reservas online",
+    splash_btn: "Entrar al catálogo →",
+    products: "Productos", reservations: "Mis Reservas", admin: "Admin",
+    search_product: "Producto", search_gram: "Gramaje", search_btn: "🔍 Buscar",
+    loading: "⏳ Cargando...", error_load: "Error al cargar productos.",
+    no_products: "📦 No hay productos disponibles",
+    reserve_48: "Reserva 48h · sin pago online", view_cart: "Ver cesta →",
+    detail: "Detalle", add_reserve: "+ Añadir a reserva", selected_btn: "✓ Seleccionado",
+    kgs: "Kgs", hojas: "Hojas", fab: "Fabricante", desc: "Descripcion",
+    pasta: "Tipo de Pasta", entrada: "Entrada", ancho: "Ancho", largo: "Largo",
+    no_selected: "Sin productos seleccionados", no_selected_msg: "No has seleccionado ningún producto",
+    see_products: "Ver productos", request: "Solicitar →",
+    access_admin: "Acceso Admin", internal_only: "Solo para uso interno.",
+    enter: "Entrar", wrong_pass: "Contraseña incorrecta.", password: "Contraseña",
+    no_reservations: "📋 No hay reservas",
+    paid_tag: "✓ Pagada", expired_tag: "Expirada", pending_tag: "Pendiente",
+    mark_paid: "✓ Marcar pagada", delete_btn: "Eliminar",
+    request_title: "Solicitar reserva",
+    request_sub: "Reserva válida 48 horas. Te contactamos para el pago.",
+    name_label: "Nombre *", email_label: "Email *", tel_label: "Teléfono",
+    name_ph: "Tu nombre completo", email_ph: "tu@email.com", tel_ph: "600 000 000",
+    confirm: "Confirmar Reserva", cancel: "Cancelar",
+    err_fields: "Rellena nombre y email.", err_email: "Email no válido.", err_empty: "No has seleccionado ningún producto.",
+    success: (n) => `✓ Reserva confirmada para ${n} producto${n > 1 ? "s" : ""}. Te contactaremos en 48h.`,
+    banner_title: "Añade marketboard a tu inicio",
+    banner_sub_1: "Toca", share_word: "Compartir", banner_sub_2: "→", add_word: "\"Añadir a inicio\"",
+    select_detail: "Selecciona un producto para ver el detalle",
+    in_reserve: "✓ En la reserva", product_label: "PRODUCTO", gram_label: "GRAMAJE",
+    panel_admin: "Panel Admin", reservations_label: (n, p) => `${n} reservas · ${p} pagadas`,
+    email_subject: (name) => `Nueva reserva - ${name}`,
+    email_body: (r, prods) => `Nueva solicitud de reserva\n\nCliente: ${r.nombre}\nEmail: ${r.email}\nTeléfono: ${r.tel || "No indicado"}\n\nProductos:\n${prods}\n\nFecha: ${new Date(r.createdAt).toLocaleString("es-ES")}\nVálida hasta: ${new Date(r.expiresAt).toLocaleString("es-ES")}\n\nID: ${r.id}`,
+  },
+  en: {
+    splash_sub: "Paper & Board Stock · Online Reservations",
+    splash_btn: "Enter catalogue →",
+    products: "Products", reservations: "My Reservations", admin: "Admin",
+    search_product: "Product", search_gram: "Grammage", search_btn: "🔍 Search",
+    loading: "⏳ Loading...", error_load: "Error loading products.",
+    no_products: "📦 No products available",
+    reserve_48: "48h reservation · no upfront payment", view_cart: "View cart →",
+    detail: "Detail", add_reserve: "+ Add to reservation", selected_btn: "✓ Selected",
+    kgs: "Kgs", hojas: "Sheets", fab: "Manufacturer", desc: "Description",
+    pasta: "Pulp Type", entrada: "Entry", ancho: "Width", largo: "Length",
+    no_selected: "No products selected", no_selected_msg: "You haven't selected any product",
+    see_products: "See products", request: "Request →",
+    access_admin: "Admin Access", internal_only: "Internal use only.",
+    enter: "Sign in", wrong_pass: "Wrong password.", password: "Password",
+    no_reservations: "📋 No reservations",
+    paid_tag: "✓ Paid", expired_tag: "Expired", pending_tag: "Pending",
+    mark_paid: "✓ Mark as paid", delete_btn: "Delete",
+    request_title: "Request reservation",
+    request_sub: "Reservation valid for 48 hours. We will contact you for payment.",
+    name_label: "Name *", email_label: "Email *", tel_label: "Phone",
+    name_ph: "Your full name", email_ph: "you@email.com", tel_ph: "+34 600 000 000",
+    confirm: "Confirm Reservation", cancel: "Cancel",
+    err_fields: "Please fill in name and email.", err_email: "Invalid email.", err_empty: "No products selected.",
+    success: (n) => `✓ Reservation confirmed for ${n} product${n > 1 ? "s" : ""}. We'll contact you within 48h.`,
+    banner_title: "Add marketboard to your home screen",
+    banner_sub_1: "Tap", share_word: "Share", banner_sub_2: "→", add_word: "\"Add to Home Screen\"",
+    select_detail: "Select a product to see details",
+    in_reserve: "✓ In reservation", product_label: "PRODUCT", gram_label: "GRAMMAGE",
+    panel_admin: "Admin Panel", reservations_label: (n, p) => `${n} reservations · ${p} paid`,
+    email_subject: (name) => `New reservation - ${name}`,
+    email_body: (r, prods) => `New reservation request\n\nClient: ${r.nombre}\nEmail: ${r.email}\nPhone: ${r.tel || "Not provided"}\n\nProducts:\n${prods}\n\nDate: ${new Date(r.createdAt).toLocaleString("en-GB")}\nValid until: ${new Date(r.expiresAt).toLocaleString("en-GB")}\n\nID: ${r.id}`,
+  }
+};
+
 const getRes = () => { try { return JSON.parse(localStorage.getItem("reservas") || "[]"); } catch { return []; } };
 const saveRes = (d) => { try { localStorage.setItem("reservas", JSON.stringify(d)); } catch {} };
 const isExpired = (t) => Date.now() > t;
-const timeLeft = (t) => {
+const timeLeft = (t, lang) => {
   const d = t - Date.now();
-  if (d <= 0) return "Expirada";
+  if (d <= 0) return lang === "en" ? "Expired" : "Expirada";
   return `${Math.floor(d / 3600000)}h ${Math.floor((d % 3600000) / 60000)}m`;
 };
 
-const sendEmail = (reserva, productos) => {
+const sendEmail = (reserva, productos, t) => {
   const prods = productos.map(p =>
     `- ${p[NAME]} ${p[GRAM] ? p[GRAM] + "gr/m2" : ""} ${p[ANCHO] && p[LARGO] ? p[ANCHO] + "x" + p[LARGO] : ""} ${p[KGS] ? p[KGS] + "kg" : ""}`
   ).join("\n");
-  const subject = encodeURIComponent(`Nueva reserva - ${reserva.nombre}`);
-  const body = encodeURIComponent(
-    `Nueva solicitud de reserva\n\nCliente: ${reserva.nombre}\nEmail: ${reserva.email}\nTeléfono: ${reserva.tel || "No indicado"}\n\nProductos reservados:\n${prods}\n\nFecha: ${new Date(reserva.createdAt).toLocaleString("es-ES")}\nVálida hasta: ${new Date(reserva.expiresAt).toLocaleString("es-ES")}\n\nID: ${reserva.id}`
-  );
+  const subject = encodeURIComponent(t.email_subject(reserva.nombre));
+  const body = encodeURIComponent(t.email_body(reserva, prods));
   window.open(`mailto:${ADMIN_EMAIL}?subject=${subject}&body=${body}`);
 };
 
@@ -73,6 +145,8 @@ export default function App() {
   const [adminError, setAdminError] = useState("");
   const [tick, setTick] = useState(0);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+  const [lang] = useState(getLang());
+  const t = T[lang];
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 1024);
@@ -109,17 +183,17 @@ export default function App() {
   };
 
   const doReserve = () => {
-    if (!formData.nombre.trim() || !formData.email.trim()) { setFormError("Rellena nombre y email."); return; }
-    if (!/\S+@\S+\.\S+/.test(formData.email)) { setFormError("Email no válido."); return; }
-    if (cart.length === 0) { setFormError("No has seleccionado ningún producto."); return; }
+    if (!formData.nombre.trim() || !formData.email.trim()) { setFormError(t.err_fields); return; }
+    if (!/\S+@\S+\.\S+/.test(formData.email)) { setFormError(t.err_email); return; }
+    if (cart.length === 0) { setFormError(t.err_empty); return; }
     const newR = { id: Date.now(), ...formData, items: [...cart], createdAt: Date.now(), expiresAt: Date.now() + HOURS_48, paid: false };
     const updated = [...reservations, newR];
     setReservations(updated); saveRes(updated);
     const resProds = cart.map(id => products.find(p => p._id === id)).filter(Boolean);
-    sendEmail(newR, resProds);
+    sendEmail(newR, resProds, t);
     setFormOpen(false); setFormData({ nombre: "", email: "", tel: "" }); setFormError("");
     setCart([]);
-    setSuccessMsg(`✓ Reserva confirmada para ${newR.items.length} producto${newR.items.length > 1 ? "s" : ""}. Te contactaremos en 48h.`);
+    setSuccessMsg(t.success(newR.items.length));
     setTimeout(() => setSuccessMsg(""), 7000);
     setScreen("list");
   };
@@ -156,9 +230,9 @@ export default function App() {
       </div>
       <nav style={{ padding: "16px 12px", flex: 1 }}>
         {[
-          { id: "list", icon: "📦", label: "Productos" },
-          { id: "reservas", icon: "📋", label: "Mis Reservas", badge: cart.length },
-          { id: "admin", icon: null, label: "Admin", isUser: true },
+          { id: "list", icon: "📦", label: t.products },
+          { id: "reservas", icon: "📋", label: t.reservations, badge: cart.length },
+          { id: "admin", icon: null, label: t.admin, isUser: true },
         ].map(item => (
           <div key={item.id}
             onClick={() => { setScreen(item.id); if (item.id === "admin") { setAdminAuth(false); setAdminPass(""); } }}
@@ -183,20 +257,20 @@ export default function App() {
     <div style={{ flex: 1, overflow: "auto" }}>
       <div style={{ padding: "16px 20px", background: "#fff", borderBottom: "1px solid #eee", display: "flex", gap: 10, alignItems: "flex-end" }}>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 11, color: "#888", marginBottom: 4, fontWeight: 600 }}>PRODUCTO</div>
-          <input style={inp} placeholder="Buscar producto..." value={search} onChange={e => setSearch(e.target.value)} />
+          <div style={{ fontSize: 11, color: "#888", marginBottom: 4, fontWeight: 600 }}>{t.product_label}</div>
+          <input style={inp} placeholder={t.search_product} value={search} onChange={e => setSearch(e.target.value)} />
         </div>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 11, color: "#888", marginBottom: 4, fontWeight: 600 }}>GRAMAJE</div>
+          <div style={{ fontSize: 11, color: "#888", marginBottom: 4, fontWeight: 600 }}>{t.gram_label}</div>
           <input style={inp} placeholder="ej: 300" value={searchGram} onChange={e => setSearchGram(e.target.value)} />
         </div>
         <button style={{ background: NAVY, color: "#fff", border: "none", borderRadius: 8, padding: "10px 20px", fontSize: 13, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap", fontFamily: "inherit" }}>
-          🔍 Buscar
+          {t.search_btn}
         </button>
       </div>
       {successMsg && <div style={{ background: "#d1fae5", color: "#065f46", padding: "10px 20px", fontSize: 13, fontWeight: 500 }}>{successMsg}</div>}
-      {loading && <div style={{ textAlign: "center", padding: 48, color: "#8e8e93" }}>⏳ Cargando...</div>}
-      {loadError && <div style={{ background: "#fee2e2", color: "#991b1b", margin: 16, borderRadius: 10, padding: 14, textAlign: "center", fontSize: 13 }}>Error al cargar productos.</div>}
+      {loading && <div style={{ textAlign: "center", padding: 48, color: "#8e8e93" }}>{t.loading}</div>}
+      {loadError && <div style={{ background: "#fee2e2", color: "#991b1b", margin: 16, borderRadius: 10, padding: 14, textAlign: "center", fontSize: 13 }}>{t.error_load}</div>}
       {!loading && !loadError && (
         <div style={{ padding: "16px 20px", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", gap: 12 }}>
           {filteredProducts.map(p => {
@@ -222,7 +296,7 @@ export default function App() {
             );
           })}
           {filteredProducts.length === 0 && (
-            <div style={{ gridColumn: "1/-1", textAlign: "center", padding: 60, color: "#8e8e93" }}>📦 No hay productos disponibles</div>
+            <div style={{ gridColumn: "1/-1", textAlign: "center", padding: 60, color: "#8e8e93" }}>{t.no_products}</div>
           )}
         </div>
       )}
@@ -234,7 +308,7 @@ export default function App() {
       {!selected ? (
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", color: "#8e8e93", padding: 32, textAlign: "center" }}>
           <LayersIcon size={48} />
-          <p style={{ marginTop: 16, fontSize: 14 }}>Selecciona un producto para ver el detalle</p>
+          <p style={{ marginTop: 16, fontSize: 14 }}>{t.select_detail}</p>
         </div>
       ) : (
         <div style={{ padding: 24 }}>
@@ -250,17 +324,17 @@ export default function App() {
           <button
             style={{ width: "100%", background: cart.includes(selected._id) ? "#16a34a" : NAVY, color: "#fff", border: "none", borderRadius: 10, padding: "13px", fontSize: 14, fontWeight: 700, cursor: "pointer", marginBottom: 20 }}
             onClick={e => toggleCart(selected._id, e)}>
-            {cart.includes(selected._id) ? "✓ En la reserva" : "+ Añadir a reserva"}
+            {cart.includes(selected._id) ? t.in_reserve : t.add_reserve}
           </button>
           <div style={{ borderTop: "1px solid #f0f0f0" }}>
-            {selected[KGS] && <div style={{ display: "flex", justifyContent: "space-between", padding: "11px 0", borderBottom: "1px solid #f5f5f5", fontSize: 14 }}><span style={{ color: "#666" }}>Kgs</span><span style={{ fontWeight: 600, color: NAVY }}>{selected[KGS]}</span></div>}
-            {selected[HOJAS] && <div style={{ display: "flex", justifyContent: "space-between", padding: "11px 0", borderBottom: "1px solid #f5f5f5", fontSize: 14 }}><span style={{ color: "#666" }}>Hojas</span><span style={{ fontWeight: 600, color: NAVY }}>{Number(selected[HOJAS]).toLocaleString("es-ES")}</span></div>}
-            {selected[FAB] && <div style={{ display: "flex", justifyContent: "space-between", padding: "11px 0", borderBottom: "1px solid #f5f5f5", fontSize: 14 }}><span style={{ color: "#666" }}>Fabricante</span><span style={{ fontWeight: 600, color: NAVY }}>{selected[FAB]}</span></div>}
-            {selected[DESC] && <div style={{ display: "flex", justifyContent: "space-between", padding: "11px 0", borderBottom: "1px solid #f5f5f5", fontSize: 14 }}><span style={{ color: "#666" }}>Descripcion</span><span style={{ fontWeight: 600, color: NAVY }}>{selected[DESC]}</span></div>}
-            {selected[PASTA] && <div style={{ display: "flex", justifyContent: "space-between", padding: "11px 0", borderBottom: "1px solid #f5f5f5", fontSize: 14 }}><span style={{ color: "#666" }}>Tipo de Pasta</span><span style={{ fontWeight: 600, color: NAVY }}>{selected[PASTA]}</span></div>}
-            {selected[ID_ENT] && <div style={{ display: "flex", justifyContent: "space-between", padding: "11px 0", borderBottom: "1px solid #f5f5f5", fontSize: 14 }}><span style={{ color: "#666" }}>Entrada</span><span style={{ fontWeight: 600, color: NAVY }}>{selected[ID_ENT]}</span></div>}
-            {selected[ANCHO] && <div style={{ display: "flex", justifyContent: "space-between", padding: "11px 0", borderBottom: "1px solid #f5f5f5", fontSize: 14 }}><span style={{ color: "#666" }}>Ancho</span><span style={{ fontWeight: 600, color: NAVY }}>{selected[ANCHO]}</span></div>}
-            {selected[LARGO] && <div style={{ display: "flex", justifyContent: "space-between", padding: "11px 0", fontSize: 14 }}><span style={{ color: "#666" }}>Largo</span><span style={{ fontWeight: 600, color: NAVY }}>{selected[LARGO]}</span></div>}
+            {selected[KGS] && <div style={{ display: "flex", justifyContent: "space-between", padding: "11px 0", borderBottom: "1px solid #f5f5f5", fontSize: 14 }}><span style={{ color: "#666" }}>{t.kgs}</span><span style={{ fontWeight: 600, color: NAVY }}>{selected[KGS]}</span></div>}
+            {selected[HOJAS] && <div style={{ display: "flex", justifyContent: "space-between", padding: "11px 0", borderBottom: "1px solid #f5f5f5", fontSize: 14 }}><span style={{ color: "#666" }}>{t.hojas}</span><span style={{ fontWeight: 600, color: NAVY }}>{Number(selected[HOJAS]).toLocaleString("es-ES")}</span></div>}
+            {selected[FAB] && <div style={{ display: "flex", justifyContent: "space-between", padding: "11px 0", borderBottom: "1px solid #f5f5f5", fontSize: 14 }}><span style={{ color: "#666" }}>{t.fab}</span><span style={{ fontWeight: 600, color: NAVY }}>{selected[FAB]}</span></div>}
+            {selected[DESC] && <div style={{ display: "flex", justifyContent: "space-between", padding: "11px 0", borderBottom: "1px solid #f5f5f5", fontSize: 14 }}><span style={{ color: "#666" }}>{t.desc}</span><span style={{ fontWeight: 600, color: NAVY }}>{selected[DESC]}</span></div>}
+            {selected[PASTA] && <div style={{ display: "flex", justifyContent: "space-between", padding: "11px 0", borderBottom: "1px solid #f5f5f5", fontSize: 14 }}><span style={{ color: "#666" }}>{t.pasta}</span><span style={{ fontWeight: 600, color: NAVY }}>{selected[PASTA]}</span></div>}
+            {selected[ID_ENT] && <div style={{ display: "flex", justifyContent: "space-between", padding: "11px 0", borderBottom: "1px solid #f5f5f5", fontSize: 14 }}><span style={{ color: "#666" }}>{t.entrada}</span><span style={{ fontWeight: 600, color: NAVY }}>{selected[ID_ENT]}</span></div>}
+            {selected[ANCHO] && <div style={{ display: "flex", justifyContent: "space-between", padding: "11px 0", borderBottom: "1px solid #f5f5f5", fontSize: 14 }}><span style={{ color: "#666" }}>{t.ancho}</span><span style={{ fontWeight: 600, color: NAVY }}>{selected[ANCHO]}</span></div>}
+            {selected[LARGO] && <div style={{ display: "flex", justifyContent: "space-between", padding: "11px 0", fontSize: 14 }}><span style={{ color: "#666" }}>{t.largo}</span><span style={{ fontWeight: 600, color: NAVY }}>{selected[LARGO]}</span></div>}
           </div>
         </div>
       )}
@@ -269,15 +343,15 @@ export default function App() {
 
   const ReservasContent = () => (
     <div style={{ flex: 1, overflow: "auto", padding: "20px" }}>
-      <h2 style={{ fontSize: 20, fontWeight: 800, color: NAVY, marginBottom: 4 }}>Mis Reservas</h2>
+      <h2 style={{ fontSize: 20, fontWeight: 800, color: NAVY, marginBottom: 4 }}>{t.reservations}</h2>
       <p style={{ fontSize: 13, color: "#8e8e93", marginBottom: 20 }}>
-        {cart.length === 0 ? "Sin productos seleccionados" : `${cart.length} producto${cart.length > 1 ? "s" : ""} seleccionado${cart.length > 1 ? "s" : ""}`}
+        {cart.length === 0 ? t.no_selected : `${cart.length} ${lang === "en" ? `product${cart.length > 1 ? "s" : ""} selected` : `producto${cart.length > 1 ? "s" : ""} seleccionado${cart.length > 1 ? "s" : ""}`}`}
       </p>
       {cart.length === 0 ? (
         <div style={{ textAlign: "center", padding: 60, color: "#8e8e93", background: "#fff", borderRadius: 12 }}>
           <div style={{ fontSize: 40, marginBottom: 12 }}>📋</div>
-          <div style={{ fontSize: 14, marginBottom: 20 }}>No has seleccionado ningún producto</div>
-          <button onClick={() => setScreen("list")} style={{ background: NAVY, color: "#fff", border: "none", borderRadius: 10, padding: "12px 24px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Ver productos</button>
+          <div style={{ fontSize: 14, marginBottom: 20 }}>{t.no_selected_msg}</div>
+          <button onClick={() => setScreen("list")} style={{ background: NAVY, color: "#fff", border: "none", borderRadius: 10, padding: "12px 24px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>{t.see_products}</button>
         </div>
       ) : (
         <>
@@ -295,7 +369,7 @@ export default function App() {
           </div>
           <button onClick={() => setFormOpen(true)}
             style={{ background: NAVY, color: "#fff", border: "none", borderRadius: 12, padding: "14px 32px", fontSize: 15, fontWeight: 700, cursor: "pointer", width: "100%" }}>
-            Solicitar reserva →
+            {t.request}
           </button>
         </>
       )}
@@ -304,7 +378,7 @@ export default function App() {
 
   const AdminContent = () => (
     <div style={{ flex: 1, overflow: "auto", padding: "20px" }}>
-      <h2 style={{ fontSize: 20, fontWeight: 800, color: NAVY, marginBottom: 4 }}>Panel Admin</h2>
+      <h2 style={{ fontSize: 20, fontWeight: 800, color: NAVY, marginBottom: 4 }}>{t.panel_admin}</h2>
       {!adminAuth ? (
         <div style={{ maxWidth: 400, background: "#fff", borderRadius: 14, padding: 32, marginTop: 20, border: "1px solid #eee" }}>
           <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
@@ -312,22 +386,22 @@ export default function App() {
               <UserIcon size={56} color="#fff" />
             </div>
           </div>
-          <h3 style={{ fontSize: 18, fontWeight: 800, color: NAVY, marginBottom: 6, textAlign: "center" }}>Acceso Admin</h3>
-          <p style={{ fontSize: 13, color: "#8e8e93", marginBottom: 20, textAlign: "center" }}>Solo para uso interno.</p>
-          <input style={{ ...inp, marginBottom: 12 }} type="password" placeholder="Contraseña"
+          <h3 style={{ fontSize: 18, fontWeight: 800, color: NAVY, marginBottom: 6, textAlign: "center" }}>{t.access_admin}</h3>
+          <p style={{ fontSize: 13, color: "#8e8e93", marginBottom: 20, textAlign: "center" }}>{t.internal_only}</p>
+          <input style={{ ...inp, marginBottom: 12 }} type="password" placeholder={t.password}
             value={adminPass} onChange={e => setAdminPass(e.target.value)}
-            onKeyDown={e => { if (e.key === "Enter") { adminPass === ADMIN_PASSWORD ? (setAdminAuth(true), setAdminError("")) : setAdminError("Contraseña incorrecta."); }}} />
+            onKeyDown={e => { if (e.key === "Enter") { adminPass === ADMIN_PASSWORD ? (setAdminAuth(true), setAdminError("")) : setAdminError(t.wrong_pass); }}} />
           {adminError && <p style={{ color: "#dc2626", fontSize: 13, marginBottom: 10 }}>{adminError}</p>}
           <button style={{ background: NAVY, color: "#fff", border: "none", borderRadius: 10, padding: 13, fontSize: 15, fontWeight: 700, width: "100%", cursor: "pointer", fontFamily: "inherit" }}
-            onClick={() => { adminPass === ADMIN_PASSWORD ? (setAdminAuth(true), setAdminError("")) : setAdminError("Contraseña incorrecta."); }}>
-            Entrar
+            onClick={() => { adminPass === ADMIN_PASSWORD ? (setAdminAuth(true), setAdminError("")) : setAdminError(t.wrong_pass); }}>
+            {t.enter}
           </button>
         </div>
       ) : (
         <div style={{ marginTop: 12 }}>
-          <p style={{ fontSize: 13, color: "#8e8e93", marginBottom: 16 }}>{reservations.length} reservas · {reservations.filter(r => r.paid).length} pagadas</p>
+          <p style={{ fontSize: 13, color: "#8e8e93", marginBottom: 16 }}>{t.reservations_label(reservations.length, reservations.filter(r => r.paid).length)}</p>
           {reservations.length === 0 ? (
-            <div style={{ textAlign: "center", padding: 48, color: "#8e8e93", background: "#fff", borderRadius: 12 }}>📋 No hay reservas</div>
+            <div style={{ textAlign: "center", padding: 48, color: "#8e8e93", background: "#fff", borderRadius: 12 }}>{t.no_reservations}</div>
           ) : (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(360px, 1fr))", gap: 12 }}>
               {reservations.map(res => {
@@ -338,12 +412,12 @@ export default function App() {
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
                       <span style={{ fontWeight: 800, fontSize: 15, color: NAVY }}>{res.nombre}</span>
                       <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20, background: res.paid ? "#d1fae5" : expired ? "#fee2e2" : "#fef3c7", color: res.paid ? "#065f46" : expired ? "#991b1b" : "#92400e" }}>
-                        {res.paid ? "✓ Pagada" : expired ? "Expirada" : "Pendiente"}
+                        {res.paid ? t.paid_tag : expired ? t.expired_tag : t.pending_tag}
                       </span>
                     </div>
                     <p style={{ fontSize: 13, color: "#666" }}>{res.email}</p>
                     {res.tel && <p style={{ fontSize: 13, color: "#666" }}>📞 {res.tel}</p>}
-                    {!res.paid && !expired && <p style={{ fontSize: 12, color: GOLD, fontWeight: 700, marginTop: 4 }}>⏱ {timeLeft(res.expiresAt)}</p>}
+                    {!res.paid && !expired && <p style={{ fontSize: 12, color: GOLD, fontWeight: 700, marginTop: 4 }}>⏱ {timeLeft(res.expiresAt, lang)}</p>}
                     <div style={{ background: "#f8f9fa", borderRadius: 8, padding: "10px 12px", margin: "10px 0" }}>
                       {resProds.map(p => (
                         <div key={p._id} style={{ fontSize: 12, color: "#444", marginBottom: 2, display: "flex", gap: 6, alignItems: "center" }}>
@@ -354,9 +428,9 @@ export default function App() {
                     </div>
                     <div style={{ display: "flex", gap: 8 }}>
                       {!res.paid && !expired && (
-                        <button onClick={() => markPaid(res.id)} style={{ flex: 2, background: "#16a34a", color: "#fff", border: "none", borderRadius: 8, padding: 9, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>✓ Marcar pagada</button>
+                        <button onClick={() => markPaid(res.id)} style={{ flex: 2, background: "#16a34a", color: "#fff", border: "none", borderRadius: 8, padding: 9, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>{t.mark_paid}</button>
                       )}
-                      <button onClick={() => deleteR(res.id)} style={{ flex: 1, background: "#fff", color: "#dc2626", border: "1.5px solid #dc2626", borderRadius: 8, padding: 9, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Eliminar</button>
+                      <button onClick={() => deleteR(res.id)} style={{ flex: 1, background: "#fff", color: "#dc2626", border: "1.5px solid #dc2626", borderRadius: 8, padding: 9, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>{t.delete_btn}</button>
                     </div>
                   </div>
                 );
@@ -392,10 +466,10 @@ export default function App() {
             <span style={{ color: "#fff", fontSize: 36, fontWeight: 400, fontFamily: "Georgia, serif" }}>market</span>
             <span style={{ color: "#fff", fontSize: 36, fontWeight: 800 }}>board</span>
           </div>
-          <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 15, marginBottom: 64, textAlign: "center" }}>Stock Cartón · Reservas online</p>
+          <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 15, marginBottom: 64, textAlign: "center" }}>{t.splash_sub}</p>
           <button onClick={() => setScreen("list")}
             style={{ background: GOLD, color: "#fff", border: "none", borderRadius: 14, padding: "16px 48px", fontSize: 17, fontWeight: 700, cursor: "pointer", maxWidth: 280, width: "100%" }}>
-            Entrar al catálogo →
+            {t.splash_btn}
           </button>
         </div>
       )}
@@ -433,14 +507,14 @@ export default function App() {
             <>
               <div style={{ padding: "12px 16px", background: "#fff", borderBottom: "1px solid #eee" }}>
                 <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
-                  <input style={inp} placeholder="Producto" value={search} onChange={e => setSearch(e.target.value)} />
-                  <input style={inp} placeholder="Gramaje" value={searchGram} onChange={e => setSearchGram(e.target.value)} />
+                  <input style={inp} placeholder={t.search_product} value={search} onChange={e => setSearch(e.target.value)} />
+                  <input style={inp} placeholder={t.search_gram} value={searchGram} onChange={e => setSearchGram(e.target.value)} />
                 </div>
-                <button style={{ background: NAVY, color: "#fff", border: "none", borderRadius: 8, padding: "11px", fontSize: 14, fontWeight: 700, width: "100%", cursor: "pointer", fontFamily: "inherit" }}>🔍 Buscar</button>
+                <button style={{ background: NAVY, color: "#fff", border: "none", borderRadius: 8, padding: "11px", fontSize: 14, fontWeight: 700, width: "100%", cursor: "pointer", fontFamily: "inherit" }}>{t.search_btn}</button>
               </div>
               {successMsg && <div style={{ background: "#d1fae5", color: "#065f46", padding: "10px 16px", fontSize: 13, fontWeight: 500 }}>{successMsg}</div>}
-              {loading && <div style={{ textAlign: "center", padding: 48, color: "#8e8e93" }}>⏳ Cargando...</div>}
-              {loadError && <div style={{ background: "#fee2e2", color: "#991b1b", margin: 16, borderRadius: 10, padding: 14, textAlign: "center", fontSize: 13 }}>Error al cargar productos.</div>}
+              {loading && <div style={{ textAlign: "center", padding: 48, color: "#8e8e93" }}>{t.loading}</div>}
+              {loadError && <div style={{ background: "#fee2e2", color: "#991b1b", margin: 16, borderRadius: 10, padding: 14, textAlign: "center", fontSize: 13 }}>{t.error_load}</div>}
               {!loading && !loadError && filteredProducts.map(p => {
                 const inCart = cart.includes(p._id);
                 return (
@@ -460,10 +534,10 @@ export default function App() {
               {cart.length > 0 && (
                 <div className="cart-bar-mobile">
                   <div>
-                    <p style={{ color: "#fff", fontWeight: 700, fontSize: 14 }}>{cart.length} producto{cart.length > 1 ? "s" : ""}</p>
-                    <p style={{ color: "rgba(255,255,255,0.7)", fontSize: 11 }}>Reserva 48h · sin pago online</p>
+                    <p style={{ color: "#fff", fontWeight: 700, fontSize: 14 }}>{cart.length} {lang === "en" ? `product${cart.length > 1 ? "s" : ""} selected` : `producto${cart.length > 1 ? "s" : ""} seleccionado${cart.length > 1 ? "s" : ""}`}</p>
+                    <p style={{ color: "rgba(255,255,255,0.7)", fontSize: 11 }}>{t.reserve_48}</p>
                   </div>
-                  <button onClick={() => setScreen("reservas")} style={{ background: GOLD, color: "#fff", border: "none", borderRadius: 20, padding: "9px 18px", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>Ver cesta →</button>
+                  <button onClick={() => setScreen("reservas")} style={{ background: GOLD, color: "#fff", border: "none", borderRadius: 20, padding: "9px 18px", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>{t.view_cart}</button>
                 </div>
               )}
             </>
@@ -475,7 +549,7 @@ export default function App() {
                 <div style={{ display: "flex", alignItems: "center", gap: 12, paddingTop: 8 }}>
                   <button onClick={() => setSelected(null)} style={{ background: "none", border: "none", color: "#fff", fontSize: 26, cursor: "pointer" }}>‹</button>
                   <LayersIcon size={24} />
-                  <span style={{ color: "#fff", fontSize: 15, fontWeight: 600 }}>Detalle</span>
+                  <span style={{ color: "#fff", fontSize: 15, fontWeight: 600 }}>{t.detail}</span>
                 </div>
               </div>
               <div style={{ padding: "20px 16px" }}>
@@ -483,16 +557,16 @@ export default function App() {
                 <p style={{ fontSize: 12, color: "#8e8e93", marginBottom: 16, textTransform: "uppercase" }}>{selected[CAT] || ""} {selected[GRAM] ? selected[GRAM] + " gr/m2" : ""}</p>
                 <button style={{ width: "100%", background: cart.includes(selected._id) ? "#16a34a" : NAVY, color: "#fff", border: "none", borderRadius: 10, padding: "13px", fontSize: 14, fontWeight: 700, cursor: "pointer", marginBottom: 20 }}
                   onClick={e => toggleCart(selected._id, e)}>
-                  {cart.includes(selected._id) ? "✓ Seleccionado" : "+ Añadir a reserva"}
+                  {cart.includes(selected._id) ? t.selected_btn : t.add_reserve}
                 </button>
-                {selected[KGS] && <div className="detail-row"><span style={{ color: "#666" }}>Kgs</span><span style={{ fontWeight: 600, color: NAVY }}>{selected[KGS]}</span></div>}
-                {selected[HOJAS] && <div className="detail-row"><span style={{ color: "#666" }}>Hojas</span><span style={{ fontWeight: 600, color: NAVY }}>{Number(selected[HOJAS]).toLocaleString("es-ES")}</span></div>}
-                {selected[FAB] && <div className="detail-row"><span style={{ color: "#666" }}>Fabricante</span><span style={{ fontWeight: 600, color: NAVY }}>{selected[FAB]}</span></div>}
-                {selected[DESC] && <div className="detail-row"><span style={{ color: "#666" }}>Descripcion</span><span style={{ fontWeight: 600, color: NAVY }}>{selected[DESC]}</span></div>}
-                {selected[PASTA] && <div className="detail-row"><span style={{ color: "#666" }}>Tipo de Pasta</span><span style={{ fontWeight: 600, color: NAVY }}>{selected[PASTA]}</span></div>}
-                {selected[ID_ENT] && <div className="detail-row"><span style={{ color: "#666" }}>Entrada</span><span style={{ fontWeight: 600, color: NAVY }}>{selected[ID_ENT]}</span></div>}
-                {selected[ANCHO] && <div className="detail-row"><span style={{ color: "#666" }}>Ancho</span><span style={{ fontWeight: 600, color: NAVY }}>{selected[ANCHO]}</span></div>}
-                {selected[LARGO] && <div className="detail-row"><span style={{ color: "#666" }}>Largo</span><span style={{ fontWeight: 600, color: NAVY }}>{selected[LARGO]}</span></div>}
+                {selected[KGS] && <div className="detail-row"><span style={{ color: "#666" }}>{t.kgs}</span><span style={{ fontWeight: 600, color: NAVY }}>{selected[KGS]}</span></div>}
+                {selected[HOJAS] && <div className="detail-row"><span style={{ color: "#666" }}>{t.hojas}</span><span style={{ fontWeight: 600, color: NAVY }}>{Number(selected[HOJAS]).toLocaleString("es-ES")}</span></div>}
+                {selected[FAB] && <div className="detail-row"><span style={{ color: "#666" }}>{t.fab}</span><span style={{ fontWeight: 600, color: NAVY }}>{selected[FAB]}</span></div>}
+                {selected[DESC] && <div className="detail-row"><span style={{ color: "#666" }}>{t.desc}</span><span style={{ fontWeight: 600, color: NAVY }}>{selected[DESC]}</span></div>}
+                {selected[PASTA] && <div className="detail-row"><span style={{ color: "#666" }}>{t.pasta}</span><span style={{ fontWeight: 600, color: NAVY }}>{selected[PASTA]}</span></div>}
+                {selected[ID_ENT] && <div className="detail-row"><span style={{ color: "#666" }}>{t.entrada}</span><span style={{ fontWeight: 600, color: NAVY }}>{selected[ID_ENT]}</span></div>}
+                {selected[ANCHO] && <div className="detail-row"><span style={{ color: "#666" }}>{t.ancho}</span><span style={{ fontWeight: 600, color: NAVY }}>{selected[ANCHO]}</span></div>}
+                {selected[LARGO] && <div className="detail-row"><span style={{ color: "#666" }}>{t.largo}</span><span style={{ fontWeight: 600, color: NAVY }}>{selected[LARGO]}</span></div>}
               </div>
             </div>
           )}
@@ -506,7 +580,7 @@ export default function App() {
         <div className="bottom-bar">
           <div className="nav-item" onClick={() => setScreen("list")}>
             <span style={{ fontSize: 22 }}>📦</span>
-            <span className="nav-label" style={{ color: screen === "list" ? NAVY : "#aaa" }}>Productos</span>
+            <span className="nav-label" style={{ color: screen === "list" ? NAVY : "#aaa" }}>{t.products}</span>
             {screen === "list" && <div style={{ width: 20, height: 2, background: NAVY, borderRadius: 1, marginTop: 2 }} />}
           </div>
           <div className="nav-item" onClick={() => setScreen("reservas")}>
@@ -514,12 +588,12 @@ export default function App() {
               <span style={{ fontSize: 22 }}>📋</span>
               {cart.length > 0 && <span style={{ position: "absolute", top: -4, right: -8, background: "#dc2626", color: "#fff", borderRadius: 10, fontSize: 9, fontWeight: 700, padding: "1px 5px" }}>{cart.length}</span>}
             </div>
-            <span className="nav-label" style={{ color: screen === "reservas" ? NAVY : "#aaa" }}>Mis Reservas</span>
+            <span className="nav-label" style={{ color: screen === "reservas" ? NAVY : "#aaa" }}>{t.reservations}</span>
             {screen === "reservas" && <div style={{ width: 20, height: 2, background: NAVY, borderRadius: 1, marginTop: 2 }} />}
           </div>
           <div className="nav-item" onClick={() => { setScreen("admin"); setAdminAuth(false); setAdminPass(""); }}>
             <UserIcon size={28} color={screen === "admin" ? NAVY : "#aaa"} />
-            <span className="nav-label" style={{ color: screen === "admin" ? NAVY : "#aaa" }}>Admin</span>
+            <span className="nav-label" style={{ color: screen === "admin" ? NAVY : "#aaa" }}>{t.admin}</span>
             {screen === "admin" && <div style={{ width: 20, height: 2, background: NAVY, borderRadius: 1, marginTop: 2 }} />}
           </div>
         </div>
@@ -529,8 +603,8 @@ export default function App() {
         <div className="modal-overlay" onClick={() => setFormOpen(false)}>
           <div className="modal-sheet" onClick={e => e.stopPropagation()}>
             <div className="handle" />
-            <h2 style={{ fontSize: 20, fontWeight: 800, color: NAVY, marginBottom: 4 }}>Solicitar reserva</h2>
-            <p style={{ fontSize: 13, color: "#8e8e93", marginBottom: 16 }}>Reserva válida <strong>48 horas</strong>. Te contactamos para el pago.</p>
+            <h2 style={{ fontSize: 20, fontWeight: 800, color: NAVY, marginBottom: 4 }}>{t.request_title}</h2>
+            <p style={{ fontSize: 13, color: "#8e8e93", marginBottom: 16 }}>{t.request_sub}</p>
             <div style={{ background: "#f8f9fa", borderRadius: 12, padding: "8px 14px", marginBottom: 20 }}>
               {cartProducts.map(p => (
                 <div key={p._id} style={{ padding: "8px 0", borderBottom: "1px solid #eee", display: "flex", gap: 10, alignItems: "center" }}>
@@ -544,21 +618,21 @@ export default function App() {
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 20 }}>
               <div>
-                <label style={{ fontSize: 13, fontWeight: 700, color: NAVY, display: "block", marginBottom: 6 }}>Nombre *</label>
-                <input style={inp} placeholder="Tu nombre completo" value={formData.nombre} onChange={e => setFormData(d => ({ ...d, nombre: e.target.value }))} />
+                <label style={{ fontSize: 13, fontWeight: 700, color: NAVY, display: "block", marginBottom: 6 }}>{t.name_label}</label>
+                <input style={inp} placeholder={t.name_ph} value={formData.nombre} onChange={e => setFormData(d => ({ ...d, nombre: e.target.value }))} />
               </div>
               <div>
-                <label style={{ fontSize: 13, fontWeight: 700, color: NAVY, display: "block", marginBottom: 6 }}>Email *</label>
-                <input style={inp} type="email" placeholder="tu@email.com" value={formData.email} onChange={e => setFormData(d => ({ ...d, email: e.target.value }))} />
+                <label style={{ fontSize: 13, fontWeight: 700, color: NAVY, display: "block", marginBottom: 6 }}>{t.email_label}</label>
+                <input style={inp} type="email" placeholder={t.email_ph} value={formData.email} onChange={e => setFormData(d => ({ ...d, email: e.target.value }))} />
               </div>
               <div>
-                <label style={{ fontSize: 13, fontWeight: 700, color: NAVY, display: "block", marginBottom: 6 }}>Teléfono</label>
-                <input style={inp} type="tel" placeholder="600 000 000" value={formData.tel} onChange={e => setFormData(d => ({ ...d, tel: e.target.value }))} />
+                <label style={{ fontSize: 13, fontWeight: 700, color: NAVY, display: "block", marginBottom: 6 }}>{t.tel_label}</label>
+                <input style={inp} type="tel" placeholder={t.tel_ph} value={formData.tel} onChange={e => setFormData(d => ({ ...d, tel: e.target.value }))} />
               </div>
             </div>
             {formError && <p style={{ color: "#dc2626", fontSize: 13, marginBottom: 12 }}>{formError}</p>}
-            <button style={{ background: NAVY, color: "#fff", border: "none", borderRadius: 12, padding: 14, fontSize: 16, fontWeight: 700, width: "100%", cursor: "pointer", fontFamily: "inherit", marginBottom: 10 }} onClick={doReserve}>Confirmar Reserva</button>
-            <button style={{ background: "#fff", color: NAVY, border: "1.5px solid #ddd", borderRadius: 12, padding: 13, fontSize: 15, fontWeight: 600, width: "100%", cursor: "pointer", fontFamily: "inherit" }} onClick={() => setFormOpen(false)}>Cancelar</button>
+            <button style={{ background: NAVY, color: "#fff", border: "none", borderRadius: 12, padding: 14, fontSize: 16, fontWeight: 700, width: "100%", cursor: "pointer", fontFamily: "inherit", marginBottom: 10 }} onClick={doReserve}>{t.confirm}</button>
+            <button style={{ background: "#fff", color: NAVY, border: "1.5px solid #ddd", borderRadius: 12, padding: 13, fontSize: 15, fontWeight: 600, width: "100%", cursor: "pointer", fontFamily: "inherit" }} onClick={() => setFormOpen(false)}>{t.cancel}</button>
           </div>
         </div>
       )}
@@ -567,9 +641,9 @@ export default function App() {
         <div style={{ position: "fixed", bottom: 90, left: "50%", transform: "translateX(-50%)", width: "calc(100% - 32px)", maxWidth: 398, background: NAVY, borderRadius: 14, padding: "14px 16px", zIndex: 150, boxShadow: "0 4px 24px rgba(0,0,0,0.25)", display: "flex", alignItems: "center", gap: 12 }}>
           <LayersIcon size={36} />
           <div style={{ flex: 1 }}>
-            <p style={{ color: "#fff", fontWeight: 700, fontSize: 13, marginBottom: 2 }}>Añade marketboard a tu inicio</p>
+            <p style={{ color: "#fff", fontWeight: 700, fontSize: 13, marginBottom: 2 }}>{t.banner_title}</p>
             <p style={{ color: "rgba(255,255,255,0.65)", fontSize: 11, lineHeight: 1.4 }}>
-              Toca <strong style={{ color: GOLD }}>Compartir</strong> → <strong style={{ color: GOLD }}>"Añadir a inicio"</strong>
+              {t.banner_sub_1} <strong style={{ color: GOLD }}>{t.share_word}</strong> {t.banner_sub_2} <strong style={{ color: GOLD }}>{t.add_word}</strong>
             </p>
           </div>
           <button onClick={dismissBanner} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.5)", fontSize: 20, cursor: "pointer", padding: 4 }}>×</button>
