@@ -1,4 +1,4 @@
- import { useState, useEffect } from "react";
+  import { useState, useEffect } from "react";
 
 const SHEET_URL = "https://opensheet.elk.sh/10tWEt77gKq5CDpfgBjeyFHA-zAjtaoHSpQ4OgtsV1dk/productos.csv";
 const ADMIN_EMAIL = "hakkinen2002@me.com";
@@ -72,6 +72,13 @@ export default function App() {
   const [adminAuth, setAdminAuth] = useState(false);
   const [adminError, setAdminError] = useState("");
   const [tick, setTick] = useState(0);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     fetch(SHEET_URL)
@@ -133,228 +140,201 @@ export default function App() {
   });
   const dismissBanner = () => { try { localStorage.setItem("install_dismissed", "1"); } catch {} setShowBanner(false); };
 
-  return (
-    <div style={{ maxWidth: 430, margin: "0 auto", minHeight: "100vh", background: "#f5f6fa", fontFamily: "'Segoe UI', -apple-system, sans-serif" }}>
-      <style>{`
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        input::placeholder { color: #bbb; font-size: 12px; }
-        .row-item { background: #fff; padding: 13px 16px; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; gap: 12px; cursor: pointer; }
-        .row-item:active { background: #f9f9f9; }
-        .detail-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f2f2f7; font-size: 14px; }
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 200; display: flex; align-items: flex-end; }
-        .modal-sheet { background: #fff; border-radius: 20px 20px 0 0; padding: 0 20px 44px; width: 100%; max-height: 93vh; overflow-y: auto; }
-        .handle { width: 40px; height: 4px; background: #ddd; border-radius: 2px; margin: 12px auto 18px; }
-        .bottom-bar { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; background: #fff; border-top: 1px solid #eee; display: flex; padding-bottom: 20px; padding-top: 10px; z-index: 100; }
-        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; }
-        .nav-label { font-size: 10px; font-weight: 600; }
-        .btn-navy { background: ${NAVY}; color: #fff; border: none; border-radius: 12px; padding: 14px; font-size: 16px; font-weight: 700; width: 100%; cursor: pointer; font-family: inherit; }
-        .btn-outline { background: #fff; color: ${NAVY}; border: 1.5px solid #ddd; border-radius: 12px; padding: 13px; font-size: 15px; font-weight: 600; width: 100%; cursor: pointer; font-family: inherit; }
-        .cart-bar { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; background: ${NAVY}; padding: 13px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 90; }
-      `}</style>
-
-      {screen === "splash" && (
-        <div style={{ minHeight: "100vh", background: NAVY, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 40 }}>
-          <div style={{ marginBottom: 32 }}><LayersIcon size={80} /></div>
-          <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 12 }}>
-            <span style={{ color: "#fff", fontSize: 32, fontWeight: 400, fontFamily: "Georgia, serif" }}>market</span>
-            <span style={{ color: "#fff", fontSize: 32, fontWeight: 800 }}>board</span>
+  const Sidebar = () => (
+    <div style={{ width: 220, background: NAVY, minHeight: "100vh", display: "flex", flexDirection: "column", flexShrink: 0, position: "sticky", top: 0 }}>
+      <div style={{ padding: "28px 20px 24px", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+          <LayersIcon size={32} />
+          <div>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 2 }}>
+              <span style={{ color: "#fff", fontSize: 16, fontWeight: 400, fontFamily: "Georgia, serif" }}>market</span>
+              <span style={{ color: "#fff", fontSize: 16, fontWeight: 800 }}>board</span>
+            </div>
+            <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 10 }}>Stock Cartón</div>
           </div>
-          <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 15, marginBottom: 64, textAlign: "center" }}>Stock Cartón · Reservas online</p>
-          <button onClick={() => setScreen("list")}
-            style={{ background: GOLD, color: "#fff", border: "none", borderRadius: 14, padding: "16px 48px", fontSize: 17, fontWeight: 700, cursor: "pointer", width: "100%", maxWidth: 280 }}>
-            Entrar al catálogo →
-          </button>
         </div>
-      )}
-
-      {screen === "list" && (
-        <div style={{ paddingBottom: 80 }}>
-          <div style={{ background: NAVY, padding: "14px 16px" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <LayersIcon size={28} />
-                <div style={{ display: "flex", alignItems: "baseline", gap: 3 }}>
-                  <span style={{ color: "#fff", fontSize: 18, fontWeight: 400, fontFamily: "Georgia, serif" }}>market</span>
-                  <span style={{ color: "#fff", fontSize: 18, fontWeight: 800 }}>board</span>
-                </div>
-              </div>
-              <div style={{ color: "#fff", fontSize: 22 }}>☰</div>
-            </div>
+      </div>
+      <nav style={{ padding: "16px 12px", flex: 1 }}>
+        {[
+          { id: "list", icon: "📦", label: "Productos" },
+          { id: "reservas", icon: "📋", label: "Mis Reservas", badge: cart.length },
+          { id: "admin", icon: null, label: "Admin", isUser: true },
+        ].map(item => (
+          <div key={item.id}
+            onClick={() => { setScreen(item.id); if (item.id === "admin") { setAdminAuth(false); setAdminPass(""); } }}
+            style={{ display: "flex", alignItems: "center", gap: 10, padding: "11px 12px", borderRadius: 10, marginBottom: 4, cursor: "pointer", background: screen === item.id ? "rgba(255,255,255,0.12)" : "transparent" }}>
+            {item.isUser
+              ? <UserIcon size={20} color={screen === item.id ? "#fff" : "rgba(255,255,255,0.5)"} />
+              : <span style={{ fontSize: 18 }}>{item.icon}</span>}
+            <span style={{ color: screen === item.id ? "#fff" : "rgba(255,255,255,0.55)", fontSize: 14, fontWeight: screen === item.id ? 700 : 400 }}>{item.label}</span>
+            {item.badge > 0 && (
+              <span style={{ marginLeft: "auto", background: "#dc2626", color: "#fff", borderRadius: 10, fontSize: 10, fontWeight: 700, padding: "1px 7px" }}>{item.badge}</span>
+            )}
           </div>
+        ))}
+      </nav>
+      <div style={{ padding: "16px 20px", borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+        <div style={{ color: "rgba(255,255,255,0.3)", fontSize: 11 }}>marketboard.org</div>
+      </div>
+    </div>
+  );
 
-          <div style={{ padding: "12px 16px 12px", background: "#fff", borderBottom: "1px solid #eee" }}>
-            <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
-              <div style={{ flex: 1 }}>
-                <input style={inp} placeholder="Producto" value={search} onChange={e => setSearch(e.target.value)} onKeyDown={e => e.key === "Enter" && e.target.blur()} />
-              </div>
-              <div style={{ flex: 1 }}>
-                <input style={inp} placeholder="Gramaje" value={searchGram} onChange={e => setSearchGram(e.target.value)} onKeyDown={e => e.key === "Enter" && e.target.blur()} />
-              </div>
-            </div>
-            <button style={{ background: NAVY, color: "#fff", border: "none", borderRadius: 8, padding: "11px", fontSize: 14, fontWeight: 700, width: "100%", cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-              🔍 Buscar
-            </button>
-          </div>
-
-          {successMsg && <div style={{ background: "#d1fae5", color: "#065f46", padding: "10px 16px", fontSize: 13, fontWeight: 500 }}>{successMsg}</div>}
-          {loading && <div style={{ textAlign: "center", padding: 48, color: "#8e8e93" }}>⏳ Cargando productos...</div>}
-          {loadError && <div style={{ background: "#fee2e2", color: "#991b1b", margin: 16, borderRadius: 10, padding: 14, textAlign: "center", fontSize: 13 }}>Error al cargar productos.</div>}
-
-          {!loading && !loadError && filteredProducts.map(p => {
+  const ProductList = () => (
+    <div style={{ flex: 1, overflow: "auto" }}>
+      <div style={{ padding: "16px 20px", background: "#fff", borderBottom: "1px solid #eee", display: "flex", gap: 10, alignItems: "flex-end" }}>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 11, color: "#888", marginBottom: 4, fontWeight: 600 }}>PRODUCTO</div>
+          <input style={inp} placeholder="Buscar producto..." value={search} onChange={e => setSearch(e.target.value)} />
+        </div>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 11, color: "#888", marginBottom: 4, fontWeight: 600 }}>GRAMAJE</div>
+          <input style={inp} placeholder="ej: 300" value={searchGram} onChange={e => setSearchGram(e.target.value)} />
+        </div>
+        <button style={{ background: NAVY, color: "#fff", border: "none", borderRadius: 8, padding: "10px 20px", fontSize: 13, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap", fontFamily: "inherit" }}>
+          🔍 Buscar
+        </button>
+      </div>
+      {successMsg && <div style={{ background: "#d1fae5", color: "#065f46", padding: "10px 20px", fontSize: 13, fontWeight: 500 }}>{successMsg}</div>}
+      {loading && <div style={{ textAlign: "center", padding: 48, color: "#8e8e93" }}>⏳ Cargando...</div>}
+      {loadError && <div style={{ background: "#fee2e2", color: "#991b1b", margin: 16, borderRadius: 10, padding: 14, textAlign: "center", fontSize: 13 }}>Error al cargar productos.</div>}
+      {!loading && !loadError && (
+        <div style={{ padding: "16px 20px", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", gap: 12 }}>
+          {filteredProducts.map(p => {
             const inCart = cart.includes(p._id);
             return (
-              <div key={p._id} className="row-item" onClick={() => { setSelected(p); setScreen("detail"); }}>
-                <div style={{ flexShrink: 0 }}><LayersIcon size={32} /></div>
+              <div key={p._id}
+                style={{ background: "#fff", borderRadius: 12, padding: "14px 16px", border: inCart ? `2px solid ${NAVY}` : "1px solid #eee", cursor: "pointer", display: "flex", alignItems: "center", gap: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.05)" }}
+                onClick={() => setSelected(p)}>
+                <LayersIcon size={36} />
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: NAVY, marginBottom: 2, lineHeight: 1.3 }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: NAVY, marginBottom: 3, lineHeight: 1.3 }}>
                     {p[NAME]}{p[GRAM] ? ` ${p[GRAM]} gr/m2` : ""}
                   </div>
                   <div style={{ fontSize: 12, color: "#8e8e93" }}>
-                    {p[ANCHO] && p[LARGO] ? `${p[ANCHO]}x${p[LARGO]}` : ""}{p[KGS] ? ` · ${p[KGS]} kg` : ""}
+                    {p[ANCHO] && p[LARGO] ? `${p[ANCHO]}x${p[LARGO]}` : ""}{p[KGS] ? ` · ${p[KGS]} kg` : ""}{p[CAT] ? ` · ${p[CAT]}` : ""}
                   </div>
                 </div>
                 <button onClick={e => toggleCart(p._id, e)}
-                  style={{ width: 36, height: 36, borderRadius: "50%", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 20, fontWeight: 700, background: inCart ? "#16a34a" : NAVY, color: "#fff" }}>
+                  style={{ width: 36, height: 36, borderRadius: "50%", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 700, background: inCart ? "#16a34a" : NAVY, color: "#fff" }}>
                   {inCart ? "✓" : "+"}
                 </button>
               </div>
             );
           })}
-
-          {!loading && !loadError && filteredProducts.length === 0 && (
-            <div style={{ textAlign: "center", padding: 60, color: "#8e8e93" }}>📦 No hay productos disponibles</div>
-          )}
-
-          {cart.length > 0 && (
-            <div className="cart-bar">
-              <div>
-                <p style={{ color: "#fff", fontWeight: 700, fontSize: 14 }}>{cart.length} producto{cart.length > 1 ? "s" : ""} seleccionado{cart.length > 1 ? "s" : ""}</p>
-                <p style={{ color: "rgba(255,255,255,0.7)", fontSize: 11 }}>Reserva 48h · sin pago online</p>
-              </div>
-              <button onClick={() => setScreen("reservas")}
-                style={{ background: GOLD, color: "#fff", border: "none", borderRadius: 20, padding: "9px 18px", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
-                Ver cesta →
-              </button>
-            </div>
+          {filteredProducts.length === 0 && (
+            <div style={{ gridColumn: "1/-1", textAlign: "center", padding: 60, color: "#8e8e93" }}>📦 No hay productos disponibles</div>
           )}
         </div>
       )}
+    </div>
+  );
 
-      {screen === "detail" && selected && (
-        <div style={{ paddingBottom: 100, background: "#fff", minHeight: "100vh" }}>
-          <div style={{ background: NAVY, padding: "14px 16px", display: "flex", alignItems: "center", gap: 12 }}>
-            <button onClick={() => setScreen("list")} style={{ background: "none", border: "none", color: "#fff", fontSize: 26, cursor: "pointer", padding: 0 }}>‹</button>
-            <LayersIcon size={24} />
-            <span style={{ color: "#fff", fontSize: 15, fontWeight: 600 }}>Detalle</span>
-          </div>
-          <div style={{ padding: "20px 16px 0" }}>
-            <h1 style={{ fontSize: 20, fontWeight: 800, color: NAVY, marginBottom: 4 }}>{selected[NAME]}</h1>
-            <p style={{ fontSize: 12, color: "#8e8e93", marginBottom: 20, textTransform: "uppercase", letterSpacing: 0.5 }}>
-              {selected[CAT] ? selected[CAT] + "  " : ""}{selected[GRAM] ? selected[GRAM] + " gr/m2  " : ""}{selected[ANCHO] && selected[LARGO] ? `${selected[ANCHO]}x${selected[LARGO]}` : ""}
-            </p>
-            <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
-              <button style={{ flex: 1, background: cart.includes(selected._id) ? "#16a34a" : NAVY, color: "#fff", border: "none", borderRadius: 10, padding: "13px", fontSize: 14, fontWeight: 700, cursor: "pointer" }}
-                onClick={e => toggleCart(selected._id, e)}>
-                {cart.includes(selected._id) ? "✓ Seleccionado" : "+ Añadir a reserva"}
-              </button>
-              <button onClick={() => setScreen("list")} style={{ flex: 1, background: "#fff", color: NAVY, border: "1.5px solid #ddd", borderRadius: 10, padding: "13px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Volver</button>
+  const DetailPanel = () => (
+    <div style={{ width: 320, background: "#fff", borderLeft: "1px solid #eee", overflow: "auto", flexShrink: 0 }}>
+      {!selected ? (
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", color: "#8e8e93", padding: 32, textAlign: "center" }}>
+          <LayersIcon size={48} />
+          <p style={{ marginTop: 16, fontSize: 14 }}>Selecciona un producto para ver el detalle</p>
+        </div>
+      ) : (
+        <div style={{ padding: 24 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+            <div>
+              <h2 style={{ fontSize: 18, fontWeight: 800, color: NAVY, marginBottom: 4 }}>{selected[NAME]}</h2>
+              <p style={{ fontSize: 12, color: "#8e8e93", textTransform: "uppercase", letterSpacing: 0.5 }}>
+                {selected[CAT] ? selected[CAT] + " · " : ""}{selected[GRAM] ? selected[GRAM] + " gr/m2" : ""}
+              </p>
             </div>
-            {selected[KGS] && <div className="detail-row"><span style={{ color: "#666" }}>Kgs</span><span style={{ fontWeight: 600, color: NAVY }}>{selected[KGS]}</span></div>}
-            {selected[HOJAS] && <div className="detail-row"><span style={{ color: "#666" }}>Hojas</span><span style={{ fontWeight: 600, color: NAVY }}>{Number(selected[HOJAS]).toLocaleString("es-ES")}</span></div>}
-            {selected[FAB] && <div className="detail-row"><span style={{ color: "#666" }}>Fabricante</span><span style={{ fontWeight: 600, color: NAVY }}>{selected[FAB]}</span></div>}
-            {selected[DESC] && <div className="detail-row"><span style={{ color: "#666" }}>Descripcion</span><span style={{ fontWeight: 600, color: NAVY }}>{selected[DESC]}</span></div>}
-            {selected[PASTA] && <div className="detail-row"><span style={{ color: "#666" }}>Tipo de Pasta</span><span style={{ fontWeight: 600, color: NAVY }}>{selected[PASTA]}</span></div>}
-            {selected[ID_ENT] && <div className="detail-row"><span style={{ color: "#666" }}>Entrada</span><span style={{ fontWeight: 600, color: NAVY }}>{selected[ID_ENT]}</span></div>}
-            {selected[ANCHO] && <div className="detail-row"><span style={{ color: "#666" }}>Ancho</span><span style={{ fontWeight: 600, color: NAVY }}>{selected[ANCHO]}</span></div>}
-            {selected[LARGO] && <div className="detail-row"><span style={{ color: "#666" }}>Largo</span><span style={{ fontWeight: 600, color: NAVY }}>{selected[LARGO]}</span></div>}
+            <button onClick={() => setSelected(null)} style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: "#aaa" }}>×</button>
+          </div>
+          <button
+            style={{ width: "100%", background: cart.includes(selected._id) ? "#16a34a" : NAVY, color: "#fff", border: "none", borderRadius: 10, padding: "13px", fontSize: 14, fontWeight: 700, cursor: "pointer", marginBottom: 20 }}
+            onClick={e => toggleCart(selected._id, e)}>
+            {cart.includes(selected._id) ? "✓ En la reserva" : "+ Añadir a reserva"}
+          </button>
+          <div style={{ borderTop: "1px solid #f0f0f0" }}>
+            {selected[KGS] && <div style={{ display: "flex", justifyContent: "space-between", padding: "11px 0", borderBottom: "1px solid #f5f5f5", fontSize: 14 }}><span style={{ color: "#666" }}>Kgs</span><span style={{ fontWeight: 600, color: NAVY }}>{selected[KGS]}</span></div>}
+            {selected[HOJAS] && <div style={{ display: "flex", justifyContent: "space-between", padding: "11px 0", borderBottom: "1px solid #f5f5f5", fontSize: 14 }}><span style={{ color: "#666" }}>Hojas</span><span style={{ fontWeight: 600, color: NAVY }}>{Number(selected[HOJAS]).toLocaleString("es-ES")}</span></div>}
+            {selected[FAB] && <div style={{ display: "flex", justifyContent: "space-between", padding: "11px 0", borderBottom: "1px solid #f5f5f5", fontSize: 14 }}><span style={{ color: "#666" }}>Fabricante</span><span style={{ fontWeight: 600, color: NAVY }}>{selected[FAB]}</span></div>}
+            {selected[DESC] && <div style={{ display: "flex", justifyContent: "space-between", padding: "11px 0", borderBottom: "1px solid #f5f5f5", fontSize: 14 }}><span style={{ color: "#666" }}>Descripcion</span><span style={{ fontWeight: 600, color: NAVY }}>{selected[DESC]}</span></div>}
+            {selected[PASTA] && <div style={{ display: "flex", justifyContent: "space-between", padding: "11px 0", borderBottom: "1px solid #f5f5f5", fontSize: 14 }}><span style={{ color: "#666" }}>Tipo de Pasta</span><span style={{ fontWeight: 600, color: NAVY }}>{selected[PASTA]}</span></div>}
+            {selected[ID_ENT] && <div style={{ display: "flex", justifyContent: "space-between", padding: "11px 0", borderBottom: "1px solid #f5f5f5", fontSize: 14 }}><span style={{ color: "#666" }}>Entrada</span><span style={{ fontWeight: 600, color: NAVY }}>{selected[ID_ENT]}</span></div>}
+            {selected[ANCHO] && <div style={{ display: "flex", justifyContent: "space-between", padding: "11px 0", borderBottom: "1px solid #f5f5f5", fontSize: 14 }}><span style={{ color: "#666" }}>Ancho</span><span style={{ fontWeight: 600, color: NAVY }}>{selected[ANCHO]}</span></div>}
+            {selected[LARGO] && <div style={{ display: "flex", justifyContent: "space-between", padding: "11px 0", fontSize: 14 }}><span style={{ color: "#666" }}>Largo</span><span style={{ fontWeight: 600, color: NAVY }}>{selected[LARGO]}</span></div>}
           </div>
         </div>
       )}
+    </div>
+  );
 
-      {screen === "reservas" && (
-        <div style={{ paddingBottom: cart.length > 0 ? 150 : 80 }}>
-          <div style={{ background: NAVY, padding: "14px 16px" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+  const ReservasContent = () => (
+    <div style={{ flex: 1, overflow: "auto", padding: "20px" }}>
+      <h2 style={{ fontSize: 20, fontWeight: 800, color: NAVY, marginBottom: 4 }}>Mis Reservas</h2>
+      <p style={{ fontSize: 13, color: "#8e8e93", marginBottom: 20 }}>
+        {cart.length === 0 ? "Sin productos seleccionados" : `${cart.length} producto${cart.length > 1 ? "s" : ""} seleccionado${cart.length > 1 ? "s" : ""}`}
+      </p>
+      {cart.length === 0 ? (
+        <div style={{ textAlign: "center", padding: 60, color: "#8e8e93", background: "#fff", borderRadius: 12 }}>
+          <div style={{ fontSize: 40, marginBottom: 12 }}>📋</div>
+          <div style={{ fontSize: 14, marginBottom: 20 }}>No has seleccionado ningún producto</div>
+          <button onClick={() => setScreen("list")} style={{ background: NAVY, color: "#fff", border: "none", borderRadius: 10, padding: "12px 24px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Ver productos</button>
+        </div>
+      ) : (
+        <>
+          <div style={{ background: "#fff", borderRadius: 12, overflow: "hidden", marginBottom: 16, border: "1px solid #eee" }}>
+            {cartProducts.map((p, i) => (
+              <div key={p._id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "13px 16px", borderBottom: i < cartProducts.length - 1 ? "1px solid #f0f0f0" : "none" }}>
                 <LayersIcon size={28} />
-                <div style={{ display: "flex", alignItems: "baseline", gap: 3 }}>
-                  <span style={{ color: "#fff", fontSize: 18, fontWeight: 400, fontFamily: "Georgia, serif" }}>market</span>
-                  <span style={{ color: "#fff", fontSize: 18, fontWeight: 800 }}>board</span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: NAVY }}>{p[NAME]}{p[GRAM] ? ` ${p[GRAM]} gr/m2` : ""}</div>
+                  <div style={{ fontSize: 12, color: "#8e8e93" }}>{p[ANCHO] && p[LARGO] ? `${p[ANCHO]}x${p[LARGO]}` : ""}{p[KGS] ? ` · ${p[KGS]} kg` : ""}</div>
                 </div>
+                <button onClick={() => toggleCart(p._id)} style={{ width: 30, height: 30, borderRadius: "50%", background: "#fee2e2", border: "none", color: "#dc2626", fontSize: 18, cursor: "pointer" }}>×</button>
               </div>
-            </div>
+            ))}
           </div>
-          <div style={{ padding: "12px 16px", background: "#fff", borderBottom: "1px solid #eee" }}>
-            <p style={{ fontSize: 13, color: "#8e8e93" }}>
-              {cart.length === 0 ? "Sin productos seleccionados" : `${cart.length} producto${cart.length > 1 ? "s" : ""} seleccionado${cart.length > 1 ? "s" : ""}`}
-            </p>
-          </div>
-          {cart.length === 0 ? (
-            <div style={{ textAlign: "center", padding: 60, color: "#8e8e93" }}>
-              <div style={{ fontSize: 40, marginBottom: 12 }}>📋</div>
-              <div style={{ fontSize: 14, marginBottom: 20 }}>No has seleccionado ningún producto</div>
-              <button onClick={() => setScreen("list")} style={{ background: NAVY, color: "#fff", border: "none", borderRadius: 10, padding: "12px 24px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Ver productos</button>
-            </div>
-          ) : (
-            <>
-              {cartProducts.map(p => (
-                <div key={p._id} className="row-item" onClick={() => { setSelected(p); setScreen("detail"); }}>
-                  <div style={{ flexShrink: 0 }}><LayersIcon size={32} /></div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: NAVY, marginBottom: 2 }}>{p[NAME]}{p[GRAM] ? ` ${p[GRAM]} gr/m2` : ""}</div>
-                    <div style={{ fontSize: 12, color: "#8e8e93" }}>{p[ANCHO] && p[LARGO] ? `${p[ANCHO]}x${p[LARGO]}` : ""}{p[KGS] ? ` · ${p[KGS]} kg` : ""}</div>
-                  </div>
-                  <button onClick={e => { e.stopPropagation(); toggleCart(p._id); }}
-                    style={{ width: 36, height: 36, borderRadius: "50%", background: "#fee2e2", border: "none", color: "#dc2626", fontSize: 20, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>×</button>
-                </div>
-              ))}
-              <div className="cart-bar">
-                <div>
-                  <p style={{ color: "#fff", fontWeight: 700, fontSize: 14 }}>{cart.length} producto{cart.length > 1 ? "s" : ""}</p>
-                  <p style={{ color: "rgba(255,255,255,0.7)", fontSize: 11 }}>Reserva 48h · sin pago online</p>
-                </div>
-                <button onClick={() => setFormOpen(true)} style={{ background: GOLD, color: "#fff", border: "none", borderRadius: 20, padding: "10px 20px", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>Solicitar →</button>
-              </div>
-            </>
-          )}
-        </div>
+          <button onClick={() => setFormOpen(true)}
+            style={{ background: NAVY, color: "#fff", border: "none", borderRadius: 12, padding: "14px 32px", fontSize: 15, fontWeight: 700, cursor: "pointer", width: "100%" }}>
+            Solicitar reserva →
+          </button>
+        </>
       )}
+    </div>
+  );
 
-      {screen === "admin" && (
-        <div style={{ paddingBottom: 80 }}>
-          <div style={{ background: NAVY, padding: "14px 16px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <UserIcon size={36} color="#fff" />
-              <span style={{ color: "#fff", fontSize: 18, fontWeight: 800 }}>Admin</span>
+  const AdminContent = () => (
+    <div style={{ flex: 1, overflow: "auto", padding: "20px" }}>
+      <h2 style={{ fontSize: 20, fontWeight: 800, color: NAVY, marginBottom: 4 }}>Panel Admin</h2>
+      {!adminAuth ? (
+        <div style={{ maxWidth: 400, background: "#fff", borderRadius: 14, padding: 32, marginTop: 20, border: "1px solid #eee" }}>
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
+            <div style={{ background: NAVY, borderRadius: "50%", width: 90, height: 90, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <UserIcon size={56} color="#fff" />
             </div>
           </div>
-          {!adminAuth ? (
-            <div style={{ padding: 20 }}>
-              <div style={{ background: "#fff", borderRadius: 14, padding: 24 }}>
-                <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
-                  <div style={{ background: NAVY, borderRadius: "50%", width: 110, height: 110, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <UserIcon size={70} color="#fff" />
-                  </div>
-                </div>
-                <h2 style={{ fontSize: 18, fontWeight: 800, color: NAVY, marginBottom: 6, textAlign: "center" }}>Acceso Admin</h2>
-                <p style={{ fontSize: 13, color: "#8e8e93", marginBottom: 20, textAlign: "center" }}>Solo para uso interno.</p>
-                <input style={{ ...inp, marginBottom: 12 }} type="password" placeholder="Contraseña"
-                  value={adminPass} onChange={e => setAdminPass(e.target.value)}
-                  onKeyDown={e => { if (e.key === "Enter") { adminPass === ADMIN_PASSWORD ? (setAdminAuth(true), setAdminError("")) : setAdminError("Contraseña incorrecta."); }}} />
-                {adminError && <p style={{ color: "#dc2626", fontSize: 13, marginBottom: 10 }}>{adminError}</p>}
-                <button className="btn-navy" onClick={() => { adminPass === ADMIN_PASSWORD ? (setAdminAuth(true), setAdminError("")) : setAdminError("Contraseña incorrecta."); }}>Entrar</button>
-              </div>
-            </div>
+          <h3 style={{ fontSize: 18, fontWeight: 800, color: NAVY, marginBottom: 6, textAlign: "center" }}>Acceso Admin</h3>
+          <p style={{ fontSize: 13, color: "#8e8e93", marginBottom: 20, textAlign: "center" }}>Solo para uso interno.</p>
+          <input style={{ ...inp, marginBottom: 12 }} type="password" placeholder="Contraseña"
+            value={adminPass} onChange={e => setAdminPass(e.target.value)}
+            onKeyDown={e => { if (e.key === "Enter") { adminPass === ADMIN_PASSWORD ? (setAdminAuth(true), setAdminError("")) : setAdminError("Contraseña incorrecta."); }}} />
+          {adminError && <p style={{ color: "#dc2626", fontSize: 13, marginBottom: 10 }}>{adminError}</p>}
+          <button style={{ background: NAVY, color: "#fff", border: "none", borderRadius: 10, padding: 13, fontSize: 15, fontWeight: 700, width: "100%", cursor: "pointer", fontFamily: "inherit" }}
+            onClick={() => { adminPass === ADMIN_PASSWORD ? (setAdminAuth(true), setAdminError("")) : setAdminError("Contraseña incorrecta."); }}>
+            Entrar
+          </button>
+        </div>
+      ) : (
+        <div style={{ marginTop: 12 }}>
+          <p style={{ fontSize: 13, color: "#8e8e93", marginBottom: 16 }}>{reservations.length} reservas · {reservations.filter(r => r.paid).length} pagadas</p>
+          {reservations.length === 0 ? (
+            <div style={{ textAlign: "center", padding: 48, color: "#8e8e93", background: "#fff", borderRadius: 12 }}>📋 No hay reservas</div>
           ) : (
-            <div style={{ padding: 16 }}>
-              <p style={{ fontSize: 13, color: "#8e8e93", marginBottom: 14 }}>{reservations.length} reservas · {reservations.filter(r => r.paid).length} pagadas</p>
-              {reservations.length === 0 ? (
-                <div style={{ textAlign: "center", padding: 48, color: "#8e8e93" }}>📋 No hay reservas</div>
-              ) : reservations.map(res => {
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill, minmax(360px, 1fr))", gap: 12 }}>
+              {reservations.map(res => {
                 const expired = !res.paid && isExpired(res.expiresAt);
                 const resProds = res.items.map(id => products.find(p => p._id === id)).filter(Boolean);
                 return (
-                  <div key={res.id} style={{ background: "#fff", borderRadius: 14, padding: 16, marginBottom: 12, boxShadow: "0 2px 8px rgba(0,0,0,0.06)", border: "1px solid #f0f0f0" }}>
+                  <div key={res.id} style={{ background: "#fff", borderRadius: 14, padding: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.06)", border: "1px solid #f0f0f0" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
                       <span style={{ fontWeight: 800, fontSize: 15, color: NAVY }}>{res.nombre}</span>
                       <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20, background: res.paid ? "#d1fae5" : expired ? "#fee2e2" : "#fef3c7", color: res.paid ? "#065f46" : expired ? "#991b1b" : "#92400e" }}>
@@ -366,17 +346,17 @@ export default function App() {
                     {!res.paid && !expired && <p style={{ fontSize: 12, color: GOLD, fontWeight: 700, marginTop: 4 }}>⏱ {timeLeft(res.expiresAt)}</p>}
                     <div style={{ background: "#f8f9fa", borderRadius: 8, padding: "10px 12px", margin: "10px 0" }}>
                       {resProds.map(p => (
-                        <div key={p._id} style={{ fontSize: 12, color: "#444", marginBottom: 3, display: "flex", alignItems: "center", gap: 6 }}>
-                          <LayersIcon size={14} />
+                        <div key={p._id} style={{ fontSize: 12, color: "#444", marginBottom: 2, display: "flex", gap: 6, alignItems: "center" }}>
+                          <LayersIcon size={12} />
                           {p[NAME]} {p[GRAM] ? `${p[GRAM]}gr · ` : ""}{p[ANCHO] && p[LARGO] ? `${p[ANCHO]}x${p[LARGO]} · ` : ""}{p[KGS] ? `${p[KGS]}kg` : ""}
                         </div>
                       ))}
                     </div>
                     <div style={{ display: "flex", gap: 8 }}>
                       {!res.paid && !expired && (
-                        <button onClick={() => markPaid(res.id)} style={{ flex: 2, background: "#16a34a", color: "#fff", border: "none", borderRadius: 8, padding: 10, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>✓ Marcar pagada</button>
+                        <button onClick={() => markPaid(res.id)} style={{ flex: 2, background: "#16a34a", color: "#fff", border: "none", borderRadius: 8, padding: 9, fontSize: 12, fontWeight: 700, cursor: "pointer" }}>✓ Marcar pagada</button>
                       )}
-                      <button onClick={() => deleteR(res.id)} style={{ flex: 1, background: "#fff", color: "#dc2626", border: "1.5px solid #dc2626", borderRadius: 8, padding: 10, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Eliminar</button>
+                      <button onClick={() => deleteR(res.id)} style={{ flex: 1, background: "#fff", color: "#dc2626", border: "1.5px solid #dc2626", borderRadius: 8, padding: 9, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Eliminar</button>
                     </div>
                   </div>
                 );
@@ -385,8 +365,145 @@ export default function App() {
           )}
         </div>
       )}
+    </div>
+  );
 
-      {screen !== "splash" && (
+  return (
+    <div style={{ fontFamily: "'Segoe UI', -apple-system, sans-serif", minHeight: "100vh", background: "#f5f6fa" }}>
+      <style>{`
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        input::placeholder { color: #bbb; }
+        .row-item { background: #fff; padding: 13px 16px; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; gap: 12px; cursor: pointer; }
+        .row-item:active { background: #f9f9f9; }
+        .detail-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f2f2f7; font-size: 14px; }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 200; display: flex; align-items: flex-end; }
+        .modal-sheet { background: #fff; border-radius: 20px 20px 0 0; padding: 0 20px 44px; width: 100%; max-width: 560px; margin: 0 auto; max-height: 93vh; overflow-y: auto; }
+        .handle { width: 40px; height: 4px; background: #ddd; border-radius: 2px; margin: 12px auto 18px; }
+        .bottom-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 1px solid #eee; display: flex; padding-bottom: env(safe-area-inset-bottom, 20px); padding-top: 10px; z-index: 100; }
+        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; }
+        .nav-label { font-size: 10px; font-weight: 600; }
+        .cart-bar-mobile { position: fixed; bottom: 80px; left: 0; right: 0; background: ${NAVY}; padding: 13px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 90; }
+      `}</style>
+
+      {screen === "splash" && (
+        <div style={{ minHeight: "100vh", background: NAVY, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 40 }}>
+          <div style={{ marginBottom: 32 }}><LayersIcon size={80} /></div>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 12 }}>
+            <span style={{ color: "#fff", fontSize: 36, fontWeight: 400, fontFamily: "Georgia, serif" }}>market</span>
+            <span style={{ color: "#fff", fontSize: 36, fontWeight: 800 }}>board</span>
+          </div>
+          <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 15, marginBottom: 64, textAlign: "center" }}>Stock Cartón · Reservas online</p>
+          <button onClick={() => setScreen("list")}
+            style={{ background: GOLD, color: "#fff", border: "none", borderRadius: 14, padding: "16px 48px", fontSize: 17, fontWeight: 700, cursor: "pointer", maxWidth: 280, width: "100%" }}>
+            Entrar al catálogo →
+          </button>
+        </div>
+      )}
+
+      {screen !== "splash" && !isMobile && (
+        <div style={{ display: "flex", minHeight: "100vh" }}>
+          <Sidebar />
+          <div style={{ flex: 1, display: "flex", overflow: "hidden", minHeight: "100vh" }}>
+            {screen === "list" && <><ProductList /><DetailPanel /></>}
+            {screen === "reservas" && <ReservasContent />}
+            {screen === "admin" && <AdminContent />}
+          </div>
+        </div>
+      )}
+
+      {screen !== "splash" && isMobile && (
+        <div style={{ paddingBottom: 80 }}>
+          {/* Mobile header - with safe area for notch */}
+          <div style={{ background: NAVY, paddingTop: "env(safe-area-inset-top, 44px)", paddingBottom: 12, paddingLeft: 16, paddingRight: 16 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 8 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <LayersIcon size={32} />
+                <div>
+                  <div style={{ display: "flex", alignItems: "baseline", gap: 3 }}>
+                    <span style={{ color: "#fff", fontSize: 20, fontWeight: 400, fontFamily: "Georgia, serif" }}>market</span>
+                    <span style={{ color: "#fff", fontSize: 20, fontWeight: 800 }}>board</span>
+                  </div>
+                  <div style={{ color: "rgba(255,255,255,0.45)", fontSize: 10, letterSpacing: 0.5 }}>Stock Cartón</div>
+                </div>
+              </div>
+              <div style={{ color: "rgba(255,255,255,0.6)", fontSize: 20 }}>☰</div>
+            </div>
+          </div>
+
+          {screen === "list" && (
+            <>
+              <div style={{ padding: "12px 16px", background: "#fff", borderBottom: "1px solid #eee" }}>
+                <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+                  <input style={inp} placeholder="Producto" value={search} onChange={e => setSearch(e.target.value)} />
+                  <input style={inp} placeholder="Gramaje" value={searchGram} onChange={e => setSearchGram(e.target.value)} />
+                </div>
+                <button style={{ background: NAVY, color: "#fff", border: "none", borderRadius: 8, padding: "11px", fontSize: 14, fontWeight: 700, width: "100%", cursor: "pointer", fontFamily: "inherit" }}>🔍 Buscar</button>
+              </div>
+              {successMsg && <div style={{ background: "#d1fae5", color: "#065f46", padding: "10px 16px", fontSize: 13, fontWeight: 500 }}>{successMsg}</div>}
+              {loading && <div style={{ textAlign: "center", padding: 48, color: "#8e8e93" }}>⏳ Cargando...</div>}
+              {loadError && <div style={{ background: "#fee2e2", color: "#991b1b", margin: 16, borderRadius: 10, padding: 14, textAlign: "center", fontSize: 13 }}>Error al cargar productos.</div>}
+              {!loading && !loadError && filteredProducts.map(p => {
+                const inCart = cart.includes(p._id);
+                return (
+                  <div key={p._id} className="row-item" onClick={() => setSelected(p)}>
+                    <LayersIcon size={32} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: NAVY, marginBottom: 2 }}>{p[NAME]}{p[GRAM] ? ` ${p[GRAM]} gr/m2` : ""}</div>
+                      <div style={{ fontSize: 12, color: "#8e8e93" }}>{p[ANCHO] && p[LARGO] ? `${p[ANCHO]}x${p[LARGO]}` : ""}{p[KGS] ? ` · ${p[KGS]} kg` : ""}</div>
+                    </div>
+                    <button onClick={e => toggleCart(p._id, e)}
+                      style={{ width: 36, height: 36, borderRadius: "50%", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, fontWeight: 700, background: inCart ? "#16a34a" : NAVY, color: "#fff" }}>
+                      {inCart ? "✓" : "+"}
+                    </button>
+                  </div>
+                );
+              })}
+              {cart.length > 0 && (
+                <div className="cart-bar-mobile">
+                  <div>
+                    <p style={{ color: "#fff", fontWeight: 700, fontSize: 14 }}>{cart.length} producto{cart.length > 1 ? "s" : ""}</p>
+                    <p style={{ color: "rgba(255,255,255,0.7)", fontSize: 11 }}>Reserva 48h · sin pago online</p>
+                  </div>
+                  <button onClick={() => setScreen("reservas")} style={{ background: GOLD, color: "#fff", border: "none", borderRadius: 20, padding: "9px 18px", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>Ver cesta →</button>
+                </div>
+              )}
+            </>
+          )}
+
+          {selected && screen === "list" && (
+            <div style={{ position: "fixed", inset: 0, background: "#fff", zIndex: 150, overflow: "auto", paddingBottom: 80 }}>
+              <div style={{ background: NAVY, paddingTop: "env(safe-area-inset-top, 44px)", paddingLeft: 16, paddingRight: 16, paddingBottom: 14 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12, paddingTop: 8 }}>
+                  <button onClick={() => setSelected(null)} style={{ background: "none", border: "none", color: "#fff", fontSize: 26, cursor: "pointer" }}>‹</button>
+                  <LayersIcon size={24} />
+                  <span style={{ color: "#fff", fontSize: 15, fontWeight: 600 }}>Detalle</span>
+                </div>
+              </div>
+              <div style={{ padding: "20px 16px" }}>
+                <h1 style={{ fontSize: 20, fontWeight: 800, color: NAVY, marginBottom: 4 }}>{selected[NAME]}</h1>
+                <p style={{ fontSize: 12, color: "#8e8e93", marginBottom: 16, textTransform: "uppercase" }}>{selected[CAT] || ""} {selected[GRAM] ? selected[GRAM] + " gr/m2" : ""}</p>
+                <button style={{ width: "100%", background: cart.includes(selected._id) ? "#16a34a" : NAVY, color: "#fff", border: "none", borderRadius: 10, padding: "13px", fontSize: 14, fontWeight: 700, cursor: "pointer", marginBottom: 20 }}
+                  onClick={e => toggleCart(selected._id, e)}>
+                  {cart.includes(selected._id) ? "✓ Seleccionado" : "+ Añadir a reserva"}
+                </button>
+                {selected[KGS] && <div className="detail-row"><span style={{ color: "#666" }}>Kgs</span><span style={{ fontWeight: 600, color: NAVY }}>{selected[KGS]}</span></div>}
+                {selected[HOJAS] && <div className="detail-row"><span style={{ color: "#666" }}>Hojas</span><span style={{ fontWeight: 600, color: NAVY }}>{Number(selected[HOJAS]).toLocaleString("es-ES")}</span></div>}
+                {selected[FAB] && <div className="detail-row"><span style={{ color: "#666" }}>Fabricante</span><span style={{ fontWeight: 600, color: NAVY }}>{selected[FAB]}</span></div>}
+                {selected[DESC] && <div className="detail-row"><span style={{ color: "#666" }}>Descripcion</span><span style={{ fontWeight: 600, color: NAVY }}>{selected[DESC]}</span></div>}
+                {selected[PASTA] && <div className="detail-row"><span style={{ color: "#666" }}>Tipo de Pasta</span><span style={{ fontWeight: 600, color: NAVY }}>{selected[PASTA]}</span></div>}
+                {selected[ID_ENT] && <div className="detail-row"><span style={{ color: "#666" }}>Entrada</span><span style={{ fontWeight: 600, color: NAVY }}>{selected[ID_ENT]}</span></div>}
+                {selected[ANCHO] && <div className="detail-row"><span style={{ color: "#666" }}>Ancho</span><span style={{ fontWeight: 600, color: NAVY }}>{selected[ANCHO]}</span></div>}
+                {selected[LARGO] && <div className="detail-row"><span style={{ color: "#666" }}>Largo</span><span style={{ fontWeight: 600, color: NAVY }}>{selected[LARGO]}</span></div>}
+              </div>
+            </div>
+          )}
+
+          {screen === "reservas" && <div style={{ padding: 16 }}><ReservasContent /></div>}
+          {screen === "admin" && <div style={{ padding: 16 }}><AdminContent /></div>}
+        </div>
+      )}
+
+      {screen !== "splash" && isMobile && (
         <div className="bottom-bar">
           <div className="nav-item" onClick={() => setScreen("list")}>
             <span style={{ fontSize: 22 }}>📦</span>
@@ -396,13 +513,13 @@ export default function App() {
           <div className="nav-item" onClick={() => setScreen("reservas")}>
             <div style={{ position: "relative" }}>
               <span style={{ fontSize: 22 }}>📋</span>
-              {cart.length > 0 && <span style={{ position: "absolute", top: -4, right: -8, background: "#dc2626", color: "#fff", borderRadius: 10, fontSize: 9, fontWeight: 700, padding: "1px 5px", minWidth: 16, textAlign: "center" }}>{cart.length}</span>}
+              {cart.length > 0 && <span style={{ position: "absolute", top: -4, right: -8, background: "#dc2626", color: "#fff", borderRadius: 10, fontSize: 9, fontWeight: 700, padding: "1px 5px" }}>{cart.length}</span>}
             </div>
             <span className="nav-label" style={{ color: screen === "reservas" ? NAVY : "#aaa" }}>Mis Reservas</span>
             {screen === "reservas" && <div style={{ width: 20, height: 2, background: NAVY, borderRadius: 1, marginTop: 2 }} />}
           </div>
           <div className="nav-item" onClick={() => { setScreen("admin"); setAdminAuth(false); setAdminPass(""); }}>
-            <UserIcon size={36} color={screen === "admin" ? NAVY : "#aaa"} />
+            <UserIcon size={28} color={screen === "admin" ? NAVY : "#aaa"} />
             <span className="nav-label" style={{ color: screen === "admin" ? NAVY : "#aaa" }}>Admin</span>
             {screen === "admin" && <div style={{ width: 20, height: 2, background: NAVY, borderRadius: 1, marginTop: 2 }} />}
           </div>
@@ -441,24 +558,22 @@ export default function App() {
               </div>
             </div>
             {formError && <p style={{ color: "#dc2626", fontSize: 13, marginBottom: 12 }}>{formError}</p>}
-            <button className="btn-navy" style={{ marginBottom: 10 }} onClick={doReserve}>Confirmar Reserva</button>
-            <button className="btn-outline" onClick={() => setFormOpen(false)}>Cancelar</button>
+            <button style={{ background: NAVY, color: "#fff", border: "none", borderRadius: 12, padding: 14, fontSize: 16, fontWeight: 700, width: "100%", cursor: "pointer", fontFamily: "inherit", marginBottom: 10 }} onClick={doReserve}>Confirmar Reserva</button>
+            <button style={{ background: "#fff", color: NAVY, border: "1.5px solid #ddd", borderRadius: 12, padding: 13, fontSize: 15, fontWeight: 600, width: "100%", cursor: "pointer", fontFamily: "inherit" }} onClick={() => setFormOpen(false)}>Cancelar</button>
           </div>
         </div>
       )}
 
-      {showBanner && screen !== "splash" && (
+      {showBanner && screen !== "splash" && isMobile && (
         <div style={{ position: "fixed", bottom: 90, left: "50%", transform: "translateX(-50%)", width: "calc(100% - 32px)", maxWidth: 398, background: NAVY, borderRadius: 14, padding: "14px 16px", zIndex: 150, boxShadow: "0 4px 24px rgba(0,0,0,0.25)", display: "flex", alignItems: "center", gap: 12 }}>
-          <div style={{ flexShrink: 0 }}>
-            <LayersIcon size={36} />
-          </div>
+          <LayersIcon size={36} />
           <div style={{ flex: 1 }}>
             <p style={{ color: "#fff", fontWeight: 700, fontSize: 13, marginBottom: 2 }}>Añade marketboard a tu inicio</p>
             <p style={{ color: "rgba(255,255,255,0.65)", fontSize: 11, lineHeight: 1.4 }}>
               Toca <strong style={{ color: GOLD }}>Compartir</strong> → <strong style={{ color: GOLD }}>"Añadir a inicio"</strong>
             </p>
           </div>
-          <button onClick={dismissBanner} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.5)", fontSize: 20, cursor: "pointer", padding: 4, flexShrink: 0 }}>×</button>
+          <button onClick={dismissBanner} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.5)", fontSize: 20, cursor: "pointer", padding: 4 }}>×</button>
         </div>
       )}
     </div>
