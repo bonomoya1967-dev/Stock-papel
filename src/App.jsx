@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+ import { useState, useEffect } from "react";
 
 const SHEET_URL = "https://opensheet.elk.sh/10tWEt77gKq5CDpfgBjeyFHA-zAjtaoHSpQ4OgtsV1dk/productos.csv";
 const ADMIN_EMAIL = "hakkinen2002@me.com";
@@ -122,6 +122,16 @@ export default function App() {
   const cartProducts = cart.map(id => products.find(p => p._id === id)).filter(Boolean);
 
   const inp = { width: "100%", padding: "10px 12px", border: "1.5px solid #e0e0e0", borderRadius: 8, fontSize: 13, outline: "none", background: "#fafafa", fontFamily: "inherit", color: "#111" };
+
+  const [showBanner, setShowBanner] = useState(() => {
+    try {
+      const isIOS = /iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase());
+      const isStandalone = window.navigator.standalone;
+      const dismissed = localStorage.getItem("install_dismissed");
+      return isIOS && !isStandalone && !dismissed;
+    } catch { return false; }
+  });
+  const dismissBanner = () => { try { localStorage.setItem("install_dismissed", "1"); } catch {} setShowBanner(false); };
 
   return (
     <div style={{ maxWidth: 430, margin: "0 auto", minHeight: "100vh", background: "#f5f6fa", fontFamily: "'Segoe UI', -apple-system, sans-serif" }}>
@@ -434,6 +444,21 @@ export default function App() {
             <button className="btn-navy" style={{ marginBottom: 10 }} onClick={doReserve}>Confirmar Reserva</button>
             <button className="btn-outline" onClick={() => setFormOpen(false)}>Cancelar</button>
           </div>
+        </div>
+      )}
+
+      {showBanner && screen !== "splash" && (
+        <div style={{ position: "fixed", bottom: 90, left: "50%", transform: "translateX(-50%)", width: "calc(100% - 32px)", maxWidth: 398, background: NAVY, borderRadius: 14, padding: "14px 16px", zIndex: 150, boxShadow: "0 4px 24px rgba(0,0,0,0.25)", display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ flexShrink: 0 }}>
+            <LayersIcon size={36} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <p style={{ color: "#fff", fontWeight: 700, fontSize: 13, marginBottom: 2 }}>Añade marketboard a tu inicio</p>
+            <p style={{ color: "rgba(255,255,255,0.65)", fontSize: 11, lineHeight: 1.4 }}>
+              Toca <strong style={{ color: GOLD }}>Compartir</strong> → <strong style={{ color: GOLD }}>"Añadir a inicio"</strong>
+            </p>
+          </div>
+          <button onClick={dismissBanner} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.5)", fontSize: 20, cursor: "pointer", padding: 4, flexShrink: 0 }}>×</button>
         </div>
       )}
     </div>
